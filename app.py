@@ -102,127 +102,66 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 팝업창 코드 (st.markdown 방식 - 공간 차지 없음)
-# 이 방식은 투명 상자(iframe)를 쓰지 않고 화면 위에 직접 그리기 때문에
-# 메뉴를 밀어내지 않고, 닫으면 흔적도 없이 사라집니다.
-
+# [2] 팝업창 코드 (버튼 기능 강화 버전)
 import streamlit as st
 
+# 자바스크립트 명령어를 버튼에 직접 심었습니다.
 popup_code = f"""
 <style>
-    /* 1. 팝업 뒷배경 (어둡게 처리) */
+    /* 디자인은 기존과 동일 */
     #pm-popup-overlay {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background-color: rgba(0, 0, 0, 0.6);
-        z-index: 999999; /* 무조건 제일 위에 */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(3px); /* 배경 살짝 흐리게 */
+        z-index: 999999;
+        display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(3px);
     }}
-    
-    /* 2. 팝업 내용 박스 */
     #pm-popup-content {{
-        background: white;
-        padding: 0;
-        border-radius: 15px;
+        background: white; padding: 0; border-radius: 15px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        width: 400px;
-        max-width: 90%;
-        text-align: center;
-        overflow: hidden;
-        position: relative;
-        animation: popupFadeIn 0.3s ease-out; /* 부드럽게 나타나기 */
+        width: 400px; max-width: 90%;
+        text-align: center; overflow: hidden; position: relative;
+        animation: popupFadeIn 0.3s ease-out;
     }}
-    
-    /* 3. 이미지 스타일 */
-    .popup-img {{
-        width: 100%;
-        height: auto;
-        display: block;
-    }}
-    
-    /* 4. 버튼 영역 */
+    .popup-img {{ width: 100%; height: auto; display: block; }}
     .popup-btn-area {{
-        display: flex;
-        justify-content: space-between;
-        padding: 12px 20px;
-        background-color: #f8f9fa;
-        border-top: 1px solid #eee;
+        display: flex; justify-content: space-between; padding: 12px 20px;
+        background-color: #f8f9fa; border-top: 1px solid #eee;
     }}
-    
-    .btn-today {{
-        background: none;
-        border: none;
-        color: #555;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: 600;
-    }}
-    
-    .btn-close {{
-        background: #333;
-        color: white;
-        border: none;
-        padding: 5px 15px;
-        border-radius: 5px;
-        font-size: 13px;
-        cursor: pointer;
-    }}
-    
-    /* 애니메이션 효과 */
-    @keyframes popupFadeIn {{
-        from {{ opacity: 0; transform: translateY(-20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
+    .btn-today {{ background: none; border: none; color: #555; font-size: 13px; cursor: pointer; font-weight: 600; }}
+    .btn-close {{ background: #333; color: white; border: none; padding: 5px 15px; border-radius: 5px; font-size: 13px; cursor: pointer; }}
+    @keyframes popupFadeIn {{ from {{ opacity: 0; transform: translateY(-20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
 </style>
 
 <div id="pm-popup-overlay">
     <div id="pm-popup-content">
         <img src="{EVENT_IMAGE_URL}" class="popup-img">
         <div class="popup-btn-area">
-            <button class="btn-today" onclick="closePopup('today')">🚫 오늘 하루 보지 않기</button>
-            <button class="btn-close" onclick="closePopup('just')">닫기</button>
+            <button class="btn-today" onclick="
+                var today = new Date().toISOString().slice(0, 10);
+                localStorage.setItem('pm_popup_hide_date_v3', today);
+                document.getElementById('pm-popup-overlay').style.display='none';
+            ">🚫 오늘 하루 보지 않기</button>
+            
+            <button class="btn-close" onclick="
+                document.getElementById('pm-popup-overlay').style.display='none';
+            ">닫기</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. 팝업 요소 가져오기
-    var popup = document.getElementById("pm-popup-overlay");
-    
-    // 2. 오늘 날짜 구하기 (YYYY-MM-DD)
-    var todayStr = new Date().toISOString().slice(0, 10);
-    
-    // 3. 저장된 기록 확인
-    var hiddenDate = localStorage.getItem("pm_popup_hide_date_v2");
-    
-    // 4. 기록이 오늘 날짜와 같으면 -> 아예 처음부터 숨김
-    if (hiddenDate === todayStr) {{
-        popup.style.display = "none";
-    }}
-
-    // 5. 닫기 버튼 눌렀을 때 실행되는 함수
-    function closePopup(type) {{
-        popup.style.display = "none"; // 화면에서 즉시 사라짐
-        
-        if (type === 'today') {{
-            // '오늘 하루 닫기'면 날짜 저장
-            localStorage.setItem("pm_popup_hide_date_v2", todayStr);
-        }}
+    // 페이지 열리자마자 '오늘 안 보기' 체크하는 기능
+    var today = new Date().toISOString().slice(0, 10);
+    var hiddenDate = localStorage.getItem("pm_popup_hide_date_v3");
+    if (hiddenDate === today) {{
+        document.getElementById("pm-popup-overlay").style.display = "none";
     }}
 </script>
 """
 
-# [3] 코드를 화면에 심기 (unsafe_allow_html=True 필수)
-# 높이 0, 너비 0이라서 화면 공간을 차지하지 않고 둥둥 떠다닙니다.
 st.markdown(popup_code, unsafe_allow_html=True)
 
-# [4] 나머지 화면 렌더링
 render_home_logo()      
 render_top_navigation()
 # --------------------------------------------------------------------------
@@ -241,6 +180,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
