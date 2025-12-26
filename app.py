@@ -99,18 +99,105 @@ if api_key:
     except Exception as e:
         print(f"모델 설정 오류: {e}")
         
-# [수정된 코드] 조건 없이 무조건 팝업 띄우기
+# [1] 팝업용 도구 가져오기
+import streamlit.components.v1 as components
+import streamlit as st # st가 없을 경우를 대비해 import
 
-from utils import show_event_popup
-
-# 1. 이미지 주소 (사장님의 새 저장소 pm-ai 주소)
+# [2] 7주년 행사 포스터 주소 (이미지 확인 완료됨)
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# 2. 조건문(if)을 싹 지우고 바로 실행합니다.
-# (페이지 상관없이, 접속하면 무조건 뜨게 만듭니다)
-show_event_popup(EVENT_IMAGE_URL)
+# [3] 팝업 HTML 코드 직접 작성 (utils.py 의존 X)
+def show_popup_directly():
+    # 팝업 디자인 및 기능 (높이 문제 해결됨)
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        /* 팝업 배경 */
+        .popup-overlay {{
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999999; /* 제일 위에 뜨도록 */
+            display: flex; justify-content: center; align-items: center;
+        }}
+        /* 팝업 내용 박스 */
+        .popup-content {{
+            background: white; padding: 0; border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            text-align: center; width: 350px; max-width: 90%;
+            overflow: hidden;
+        }}
+        .popup-img {{ width: 100%; display: block; }}
+        .btn-area {{ padding: 10px; background: #f1f1f1; display: flex; justify-content: space-between; }}
+        button {{ border: none; background: none; cursor: pointer; font-size: 14px; }}
+    </style>
+    </head>
+    <body>
+    
+    <div id="myPopup" class="popup-overlay">
+        <div class="popup-content">
+            <img src="{EVENT_IMAGE_URL}" class="popup-img">
+            <div class="btn-area">
+                <button onclick="closeToday()" style="color:#666; font-weight:bold;">🚫 오늘만 닫기</button>
+                <button onclick="closePopup()">❌ 닫기</button>
+            </div>
+        </div>
+    </div>
 
-# 3. 화면 렌더링
+    <script>
+        // 1. 날짜 체크
+        const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const hiddenDate = localStorage.getItem("pm_popup_hide_date");
+
+        if (hiddenDate === todayStr) {{
+            // 오늘 안보기로 했으면 숨김 (Javascript로 숨김)
+            document.getElementById("myPopup").style.display = "none";
+            // 중요: 부모창(Streamlit)의 iframe 높이도 줄여줌
+            toggleFrame(false);
+        }} else {{
+            // 보여줘야 하면 높이 확보
+            toggleFrame(true);
+        }}
+
+        // 2. 닫기 버튼
+        function closePopup() {{
+            document.getElementById("myPopup").style.display = "none";
+            toggleFrame(false);
+        }}
+
+        // 3. 오늘 하루 닫기
+        function closeToday() {{
+            localStorage.setItem("pm_popup_hide_date", todayStr);
+            document.getElementById("myPopup").style.display = "none";
+            toggleFrame(false);
+        }}
+
+        // 4. Streamlit iframe 높이 조절 트릭
+        function toggleFrame(show) {{
+            // 팝업이 닫힐 때 iframe 높이를 줄여서 화면을 가리지 않게 함
+            try {{
+                const frame = window.frameElement;
+                if (frame) {{
+                    frame.style.height = show ? '100vh' : '0px'; 
+                    // 100vh = 화면 전체 높이
+                }}
+            }} catch(e) {{ console.log(e); }}
+        }}
+    </script>
+    </body>
+    </html>
+    """
+    
+    # [핵심] 높이를 1000 이상 줘서 일단 화면에 공간을 확보합니다.
+    # (자바스크립트가 로딩되면서 닫히거나 조절됩니다)
+    components.html(html_code, height=1000)
+
+# [4] 실행 (무조건 실행)
+show_popup_directly()
+
+# [5] 나머지 화면 렌더링
 render_home_logo()      
 render_top_navigation()
 # --------------------------------------------------------------------------
@@ -129,6 +216,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
