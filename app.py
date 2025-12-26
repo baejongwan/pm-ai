@@ -102,13 +102,13 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 팝업창 코드 (버튼 기능 강화 버전)
+# [2] 팝업창 코드 (줄바꿈 오류 해결됨)
 import streamlit as st
 
-# 자바스크립트 명령어를 버튼에 직접 심었습니다.
+# 아래 코드는 절대 줄바꿈을 임의로 넣지 마세요! (한 줄로 이어져야 작동합니다)
 popup_code = f"""
 <style>
-    /* 디자인은 기존과 동일 */
+    /* 팝업 스타일 (CSS) - 파이썬 f-string 때문에 중괄호를 두 번 {{ }} 씁니다 */
     #pm-popup-overlay {{
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background-color: rgba(0, 0, 0, 0.6);
@@ -137,24 +137,16 @@ popup_code = f"""
     <div id="pm-popup-content">
         <img src="{EVENT_IMAGE_URL}" class="popup-img">
         <div class="popup-btn-area">
-            <button class="btn-today" onclick="
-                var today = new Date().toISOString().slice(0, 10);
-                localStorage.setItem('pm_popup_hide_date_v3', today);
-                document.getElementById('pm-popup-overlay').style.display='none';
-            ">🚫 오늘 하루 보지 않기</button>
-            
-            <button class="btn-close" onclick="
-                document.getElementById('pm-popup-overlay').style.display='none';
-            ">닫기</button>
+            <button class="btn-today" onclick="var t=new Date().toISOString().slice(0,10); localStorage.setItem('pm_popup_v4', t); document.getElementById('pm-popup-overlay').style.display='none';">🚫 오늘 하루 보지 않기</button>
+            <button class="btn-close" onclick="document.getElementById('pm-popup-overlay').style.display='none';">닫기</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 페이지 열리자마자 '오늘 안 보기' 체크하는 기능
-    var today = new Date().toISOString().slice(0, 10);
-    var hiddenDate = localStorage.getItem("pm_popup_hide_date_v3");
-    if (hiddenDate === today) {{
+    /* 페이지 로딩 시 체크 */
+    var t = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem("pm_popup_v4") === t) {{
         document.getElementById("pm-popup-overlay").style.display = "none";
     }}
 </script>
@@ -180,6 +172,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
