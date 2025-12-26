@@ -99,19 +99,18 @@ if api_key:
     except Exception as e:
         print(f"모델 설정 오류: {e}")
         
-# [1] 팝업 함수 가져오기
+# [수정된 코드] 조건 없이 무조건 팝업 띄우기
+
 from utils import show_event_popup
 
-# [2] 7주년 행사 포스터 주소 (사장님 깃허브 파일명: event_01.jpg)
-# 주의: 깃허브 저장소가 'Public(공개)' 상태여야 이 이미지가 보입니다.
-EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/event_01.jpg"
+# 1. 이미지 주소 (사장님의 새 저장소 pm-ai 주소)
+EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [3] 팝업 실행
-# 조건: 'page' 파라미터가 없거나(첫 접속), '홈 대시보드'일 때만 실행
-if "page" not in st.query_params or st.query_params["page"] == "🏠 홈 대시보드":
-    show_event_popup(EVENT_IMAGE_URL)
+# 2. 조건문(if)을 싹 지우고 바로 실행합니다.
+# (페이지 상관없이, 접속하면 무조건 뜨게 만듭니다)
+show_event_popup(EVENT_IMAGE_URL)
 
-# [4] 나머지 화면 렌더링 (이 부분은 들여쓰기 없이 벽에 붙어야 합니다)
+# 3. 화면 렌더링
 render_home_logo()      
 render_top_navigation()
 # --------------------------------------------------------------------------
@@ -130,6 +129,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
