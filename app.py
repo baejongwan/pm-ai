@@ -102,87 +102,27 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 팝업창 코드 (오류 없는 ID 연결 방식)
-import streamlit as st
+# [2] 정식 팝업창 기능 (st.dialog 사용)
+# 이 기능은 스트림릿이 직접 관리하는 '진짜 윈도우 창'을 띄웁니다.
+@st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
+def show_promo_window():
+    # 1. 이미지 출력
+    st.image(EVENT_IMAGE_URL)
+    
+    # 2. 설명 문구
+    st.caption("💡 창 밖의 어두운 부분을 클릭하거나, 오른쪽 위 X를 누르면 닫힙니다.")
+    
+    # 3. 닫기 버튼 (빨간색)
+    if st.button("닫기", type="primary", use_container_width=True):
+        st.rerun()
 
-# f-string 안에서 HTML/JS를 작성합니다.
-popup_html = f"""
-<style>
-    /* 팝업 배경 */
-    .pm-overlay {{
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7); z-index: 999999;
-        display: flex; justify-content: center; align-items: center;
-        backdrop-filter: blur(2px);
-    }}
-    /* 팝업 박스 */
-    .pm-box {{
-        background: white; width: 350px; border-radius: 12px;
-        overflow: hidden; text-align: center;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }}
-    .pm-img {{ width: 100%; display: block; }}
-    .pm-btns {{
-        padding: 12px; background: #f8f9fa;
-        display: flex; justify-content: space-between;
-        border-top: 1px solid #eee;
-    }}
-    /* 버튼 스타일 */
-    .btn-close {{
-        background: #333; color: white; border: none;
-        padding: 8px 20px; border-radius: 6px; cursor: pointer;
-    }}
-    .btn-today {{
-        background: transparent; border: 1px solid #ccc; color: #555;
-        padding: 8px 12px; border-radius: 6px; cursor: pointer;
-    }}
-</style>
-
-<div id="pm-popup-v9" class="pm-overlay">
-    <div class="pm-box">
-        <img src="{EVENT_IMAGE_URL}" class="pm-img">
-        <div class="pm-btns">
-            <button id="btn-today-v9" class="btn-today">🚫 오늘 하루 안 보기</button>
-            <button id="btn-close-v9" class="btn-close">닫기</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    (function() {{
-        // 1. 요소 찾기
-        var popup = document.getElementById('pm-popup-v9');
-        var btnClose = document.getElementById('btn-close-v9');
-        var btnToday = document.getElementById('btn-today-v9');
-
-        // 2. [닫기] 버튼 기능 연결
-        if (btnClose) {{
-            btnClose.onclick = function() {{
-                popup.style.display = 'none';
-            }};
-        }}
-
-        // 3. [오늘 안 보기] 버튼 기능 연결
-        if (btnToday) {{
-            btnToday.onclick = function() {{
-                // 오늘 날짜 저장
-                var d = new Date().toISOString().split('T')[0];
-                localStorage.setItem('pm_hide_v9', d);
-                popup.style.display = 'none';
-            }};
-        }}
-
-        // 4. 시작할 때 날짜 체크
-        var today = new Date().toISOString().split('T')[0];
-        if (localStorage.getItem('pm_hide_v9') === today) {{
-            popup.style.display = 'none';
-        }}
-    }})();
-</script>
-"""
-
-# [3] 화면에 그리기
-st.markdown(popup_html, unsafe_allow_html=True)
+# [3] 팝업 실행 로직 (접속 시 한 번만 뜨도록 설정)
+# 'home_popup_shown'이라는 이름표가 없으면 -> 팝업을 띄우고 -> 이름표를 붙임
+if "home_popup_shown" not in st.session_state:
+    # 홈 화면일 때만 띄우기
+    if "page" not in st.query_params or st.query_params["page"] == "🏠 홈 대시보드":
+        show_promo_window()
+        st.session_state["home_popup_shown"] = True
 
 # [4] 나머지 화면 렌더링
 render_home_logo()      
@@ -203,6 +143,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
