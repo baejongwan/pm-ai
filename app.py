@@ -99,105 +99,130 @@ if api_key:
     except Exception as e:
         print(f"모델 설정 오류: {e}")
         
-# [1] 팝업용 도구 가져오기
-import streamlit.components.v1 as components
-import streamlit as st # st가 없을 경우를 대비해 import
-
-# [2] 7주년 행사 포스터 주소 (이미지 확인 완료됨)
+# [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [3] 팝업 HTML 코드 직접 작성 (utils.py 의존 X)
-def show_popup_directly():
-    # 팝업 디자인 및 기능 (높이 문제 해결됨)
-    html_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-        /* 팝업 배경 */
-        .popup-overlay {{
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999999; /* 제일 위에 뜨도록 */
-            display: flex; justify-content: center; align-items: center;
-        }}
-        /* 팝업 내용 박스 */
-        .popup-content {{
-            background: white; padding: 0; border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            text-align: center; width: 350px; max-width: 90%;
-            overflow: hidden;
-        }}
-        .popup-img {{ width: 100%; display: block; }}
-        .btn-area {{ padding: 10px; background: #f1f1f1; display: flex; justify-content: space-between; }}
-        button {{ border: none; background: none; cursor: pointer; font-size: 14px; }}
-    </style>
-    </head>
-    <body>
+# [2] 팝업창 코드 (st.markdown 방식 - 공간 차지 없음)
+# 이 방식은 투명 상자(iframe)를 쓰지 않고 화면 위에 직접 그리기 때문에
+# 메뉴를 밀어내지 않고, 닫으면 흔적도 없이 사라집니다.
+
+import streamlit as st
+
+popup_code = f"""
+<style>
+    /* 1. 팝업 뒷배경 (어둡게 처리) */
+    #pm-popup-overlay {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 999999; /* 무조건 제일 위에 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(3px); /* 배경 살짝 흐리게 */
+    }}
     
-    <div id="myPopup" class="popup-overlay">
-        <div class="popup-content">
-            <img src="{EVENT_IMAGE_URL}" class="popup-img">
-            <div class="btn-area">
-                <button onclick="closeToday()" style="color:#666; font-weight:bold;">🚫 오늘만 닫기</button>
-                <button onclick="closePopup()">❌ 닫기</button>
-            </div>
+    /* 2. 팝업 내용 박스 */
+    #pm-popup-content {{
+        background: white;
+        padding: 0;
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        width: 400px;
+        max-width: 90%;
+        text-align: center;
+        overflow: hidden;
+        position: relative;
+        animation: popupFadeIn 0.3s ease-out; /* 부드럽게 나타나기 */
+    }}
+    
+    /* 3. 이미지 스타일 */
+    .popup-img {{
+        width: 100%;
+        height: auto;
+        display: block;
+    }}
+    
+    /* 4. 버튼 영역 */
+    .popup-btn-area {{
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 20px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #eee;
+    }}
+    
+    .btn-today {{
+        background: none;
+        border: none;
+        color: #555;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: 600;
+    }}
+    
+    .btn-close {{
+        background: #333;
+        color: white;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 5px;
+        font-size: 13px;
+        cursor: pointer;
+    }}
+    
+    /* 애니메이션 효과 */
+    @keyframes popupFadeIn {{
+        from {{ opacity: 0; transform: translateY(-20px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+</style>
+
+<div id="pm-popup-overlay">
+    <div id="pm-popup-content">
+        <img src="{EVENT_IMAGE_URL}" class="popup-img">
+        <div class="popup-btn-area">
+            <button class="btn-today" onclick="closePopup('today')">🚫 오늘 하루 보지 않기</button>
+            <button class="btn-close" onclick="closePopup('just')">닫기</button>
         </div>
     </div>
+</div>
 
-    <script>
-        // 1. 날짜 체크
-        const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-        const hiddenDate = localStorage.getItem("pm_popup_hide_date");
-
-        if (hiddenDate === todayStr) {{
-            // 오늘 안보기로 했으면 숨김 (Javascript로 숨김)
-            document.getElementById("myPopup").style.display = "none";
-            // 중요: 부모창(Streamlit)의 iframe 높이도 줄여줌
-            toggleFrame(false);
-        }} else {{
-            // 보여줘야 하면 높이 확보
-            toggleFrame(true);
-        }}
-
-        // 2. 닫기 버튼
-        function closePopup() {{
-            document.getElementById("myPopup").style.display = "none";
-            toggleFrame(false);
-        }}
-
-        // 3. 오늘 하루 닫기
-        function closeToday() {{
-            localStorage.setItem("pm_popup_hide_date", todayStr);
-            document.getElementById("myPopup").style.display = "none";
-            toggleFrame(false);
-        }}
-
-        // 4. Streamlit iframe 높이 조절 트릭
-        function toggleFrame(show) {{
-            // 팝업이 닫힐 때 iframe 높이를 줄여서 화면을 가리지 않게 함
-            try {{
-                const frame = window.frameElement;
-                if (frame) {{
-                    frame.style.height = show ? '100vh' : '0px'; 
-                    // 100vh = 화면 전체 높이
-                }}
-            }} catch(e) {{ console.log(e); }}
-        }}
-    </script>
-    </body>
-    </html>
-    """
+<script>
+    // 1. 팝업 요소 가져오기
+    var popup = document.getElementById("pm-popup-overlay");
     
-    # [핵심] 높이를 1000 이상 줘서 일단 화면에 공간을 확보합니다.
-    # (자바스크립트가 로딩되면서 닫히거나 조절됩니다)
-    components.html(html_code, height=1000)
+    // 2. 오늘 날짜 구하기 (YYYY-MM-DD)
+    var todayStr = new Date().toISOString().slice(0, 10);
+    
+    // 3. 저장된 기록 확인
+    var hiddenDate = localStorage.getItem("pm_popup_hide_date_v2");
+    
+    // 4. 기록이 오늘 날짜와 같으면 -> 아예 처음부터 숨김
+    if (hiddenDate === todayStr) {{
+        popup.style.display = "none";
+    }}
 
-# [4] 실행 (무조건 실행)
-show_popup_directly()
+    // 5. 닫기 버튼 눌렀을 때 실행되는 함수
+    function closePopup(type) {{
+        popup.style.display = "none"; // 화면에서 즉시 사라짐
+        
+        if (type === 'today') {{
+            // '오늘 하루 닫기'면 날짜 저장
+            localStorage.setItem("pm_popup_hide_date_v2", todayStr);
+        }}
+    }}
+</script>
+"""
 
-# [5] 나머지 화면 렌더링
+# [3] 코드를 화면에 심기 (unsafe_allow_html=True 필수)
+# 높이 0, 너비 0이라서 화면 공간을 차지하지 않고 둥둥 떠다닙니다.
+st.markdown(popup_code, unsafe_allow_html=True)
+
+# [4] 나머지 화면 렌더링
 render_home_logo()      
 render_top_navigation()
 # --------------------------------------------------------------------------
@@ -216,6 +241,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
