@@ -102,105 +102,74 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 팝업창 코드 (안전한 분리형 구조)
+# [2] 팝업창 코드 (이벤트 리스너 방식 - 클릭 무조건 작동)
 import streamlit as st
 
-# CSS(디자인), HTML(뼈대), JS(기능)를 완벽하게 분리해서 오류를 차단했습니다.
 popup_code = f"""
 <style>
-    /* 전체 화면 덮개 */
     .popup-overlay {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7); /* 배경 어둡게 */
-        z-index: 999999; /* 제일 위에 */
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 999999;
+        display: flex; justify-content: center; align-items: center;
     }}
-    
-    /* 팝업 상자 */
     .popup-box {{
-        background: white;
-        padding: 0;
-        border-radius: 12px;
-        width: 380px;
-        max-width: 90%;
+        background: white; padding: 0; border-radius: 12px;
+        width: 380px; max-width: 90%;
         box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        overflow: hidden;
-        text-align: center;
+        overflow: hidden; text-align: center;
     }}
-    
-    /* 이미지 */
-    .popup-img {{
-        width: 100%;
-        display: block;
-    }}
-    
-    /* 버튼 영역 */
+    .popup-img {{ width: 100%; display: block; }}
     .popup-btn-area {{
-        background-color: #f8f9fa;
-        padding: 15px;
-        display: flex;
-        justify-content: space-between;
+        background-color: #f8f9fa; padding: 15px;
+        display: flex; justify-content: space-between;
         border-top: 1px solid #eee;
     }}
-    
-    /* 버튼 꾸미기 */
     .btn-today {{
-        background: transparent;
-        border: 1px solid #ccc;
-        color: #555;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 13px;
+        background: transparent; border: 1px solid #ccc; color: #555;
+        padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;
     }}
     .btn-close {{
-        background-color: #333;
-        color: white;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 13px;
+        background-color: #333; color: white; border: none;
+        padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
     }}
 </style>
 
-<div id="pm-popup" class="popup-overlay">
+<div id="pm-popup-main" class="popup-overlay">
     <div class="popup-box">
         <img src="{EVENT_IMAGE_URL}" class="popup-img">
         <div class="popup-btn-area">
-            <button class="btn-today" onclick="closeToday()">🚫 오늘 하루 안 보기</button>
-            <button class="btn-close" onclick="closeJust()">닫기</button>
+            <button id="btn-hide-today" class="btn-today">🚫 오늘 하루 안 보기</button>
+            <button id="btn-close-popup" class="btn-close">닫기</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 팝업 요소 찾기
-    const popup = document.getElementById("pm-popup");
-    
-    // 오늘 날짜 구하기 (YYYY-MM-DD)
-    const today = new Date().toISOString().split('T')[0];
+    // (1) 요소 찾아오기
+    const popup = document.getElementById("pm-popup-main");
+    const btnClose = document.getElementById("btn-close-popup");
+    const btnToday = document.getElementById("btn-hide-today");
 
-    // [체크] 저장된 날짜가 오늘이면 -> 팝업 숨김
-    if (localStorage.getItem("pm_popup_date_v5") === today) {{
+    // (2) 오늘 날짜 체크
+    const todayDate = new Date().toISOString().split('T')[0];
+    if (localStorage.getItem("pm_popup_v6") === todayDate) {{
         popup.style.display = "none";
     }}
 
-    // [기능 1] 그냥 닫기
-    function closeJust() {{
-        popup.style.display = "none";
+    // (3) '닫기' 버튼에 기능 강제 주입
+    if (btnClose) {{
+        btnClose.addEventListener("click", function() {{
+            popup.style.display = "none";
+        }});
     }}
 
-    // [기능 2] 오늘 하루 안 보기
-    function closeToday() {{
-        localStorage.setItem("pm_popup_date_v5", today);
-        popup.style.display = "none";
+    // (4) '오늘 안 보기' 버튼에 기능 강제 주입
+    if (btnToday) {{
+        btnToday.addEventListener("click", function() {{
+            localStorage.setItem("pm_popup_v6", todayDate);
+            popup.style.display = "none";
+        }});
     }}
 </script>
 """
@@ -227,6 +196,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
