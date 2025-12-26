@@ -104,7 +104,7 @@ from utils import show_event_popup
 
 # [2] 7주년 행사 포스터 주소 (사장님 깃허브 파일명: event_01.jpg)
 # 주의: 깃허브 저장소가 'Public(공개)' 상태여야 이 이미지가 보입니다.
-EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
+EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/event_01.jpg"
 
 # [3] 팝업 실행
 # 조건: 'page' 파라미터가 없거나(첫 접속), '홈 대시보드'일 때만 실행
@@ -130,6 +130,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
