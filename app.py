@@ -25,10 +25,10 @@ from config import *
 # [1] 기본 페이지 설정 (아이콘 완벽 적용)
 # --------------------------------------------------------------------------
 
-# 1. 깃허브에 있는 'app_icon.png'의 주소 (사장님 저장소 주소)
+# 1. 깃허브에 있는 'app_icon.png'의 정확한 Raw 주소
 ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
 
-# 2. 스트림릿 페이지 설정 (브라우저 탭 아이콘)
+# 2. 스트림릿 페이지 설정 (PC 브라우저 탭용)
 st.set_page_config(
     page_title="PM 파트너스 허브", 
     page_icon=ICON_URL, 
@@ -36,12 +36,18 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 3. 스마트폰 '홈 화면 추가' 아이콘 강제 적용 (아이폰/갤럭시용)
-# 이 코드가 있어야 스마트폰 바탕화면에서 로고가 크게 잘 보입니다.
+# 3. [중요] 스마트폰 '홈 화면 추가' 아이콘 강제 주입
+# 이 코드가 있어야 핸드폰 바탕화면에서 왕관 대신 사장님 로고가 나옵니다.
 st.markdown(
     f"""
     <head>
         <link rel="apple-touch-icon" href="{ICON_URL}">
+        <link rel="apple-touch-icon" sizes="152x152" href="{ICON_URL}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{ICON_URL}">
+        <link rel="apple-touch-icon" sizes="167x167" href="{ICON_URL}">
+        
+        <link rel="icon" type="image/png" sizes="32x32" href="{ICON_URL}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{ICON_URL}">
         <link rel="shortcut icon" href="{ICON_URL}">
     </head>
     """,
@@ -154,4 +160,5 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
