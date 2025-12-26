@@ -102,69 +102,82 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 팝업창 코드 (들여쓰기 오류 방지 + 닫기 기능 강화)
+# [2] 팝업창 코드 (오류 없는 ID 연결 방식)
 import streamlit as st
 
-# 오해를 막기 위해 HTML 코드를 왼쪽 벽에 딱 붙여서 작성했습니다.
-# 이 변수 안의 내용은 수정하지 마세요!
+# f-string 안에서 HTML/JS를 작성합니다.
 popup_html = f"""
 <style>
-.pm-overlay {{
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); z-index: 999999;
-    display: flex; justify-content: center; align-items: center;
-}}
-.pm-box {{
-    background: white; width: 350px; border-radius: 10px;
-    overflow: hidden; text-align: center;
-}}
-.pm-img {{ width: 100%; display: block; }}
-.pm-btns {{
-    padding: 10px; background: #f8f9fa;
-    display: flex; justify-content: space-between;
-}}
-/* 버튼 디자인 */
-.btn-close {{
-    background: #333; color: white; border: none;
-    padding: 8px 15px; border-radius: 5px; cursor: pointer;
-}}
-.btn-today {{
-    background: transparent; border: 1px solid #ccc; color: #555;
-    padding: 8px 10px; border-radius: 5px; cursor: pointer;
-}}
+    /* 팝업 배경 */
+    .pm-overlay {{
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 999999;
+        display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(2px);
+    }}
+    /* 팝업 박스 */
+    .pm-box {{
+        background: white; width: 350px; border-radius: 12px;
+        overflow: hidden; text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }}
+    .pm-img {{ width: 100%; display: block; }}
+    .pm-btns {{
+        padding: 12px; background: #f8f9fa;
+        display: flex; justify-content: space-between;
+        border-top: 1px solid #eee;
+    }}
+    /* 버튼 스타일 */
+    .btn-close {{
+        background: #333; color: white; border: none;
+        padding: 8px 20px; border-radius: 6px; cursor: pointer;
+    }}
+    .btn-today {{
+        background: transparent; border: 1px solid #ccc; color: #555;
+        padding: 8px 12px; border-radius: 6px; cursor: pointer;
+    }}
 </style>
 
-<div id="pm-popup-v8" class="pm-overlay">
+<div id="pm-popup-v9" class="pm-overlay">
     <div class="pm-box">
         <img src="{EVENT_IMAGE_URL}" class="pm-img">
         <div class="pm-btns">
-            <button class="btn-today" onclick="closeToday()">🚫 오늘만 닫기</button>
-            <button class="btn-close" onclick="closePopup()">닫기</button>
+            <button id="btn-today-v9" class="btn-today">🚫 오늘 하루 안 보기</button>
+            <button id="btn-close-v9" class="btn-close">닫기</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. 팝업 요소 가져오기
-    var popup = document.getElementById('pm-popup-v8');
+    (function() {{
+        // 1. 요소 찾기
+        var popup = document.getElementById('pm-popup-v9');
+        var btnClose = document.getElementById('btn-close-v9');
+        var btnToday = document.getElementById('btn-today-v9');
 
-    // 2. 그냥 닫기 기능
-    function closePopup() {{
-        popup.style.display = 'none';
-    }}
+        // 2. [닫기] 버튼 기능 연결
+        if (btnClose) {{
+            btnClose.onclick = function() {{
+                popup.style.display = 'none';
+            }};
+        }}
 
-    // 3. 오늘 하루 안 보기 기능
-    function closeToday() {{
-        var d = new Date().toISOString().split('T')[0];
-        localStorage.setItem('pm_hide_v8', d);
-        popup.style.display = 'none';
-    }}
+        // 3. [오늘 안 보기] 버튼 기능 연결
+        if (btnToday) {{
+            btnToday.onclick = function() {{
+                // 오늘 날짜 저장
+                var d = new Date().toISOString().split('T')[0];
+                localStorage.setItem('pm_hide_v9', d);
+                popup.style.display = 'none';
+            }};
+        }}
 
-    // 4. 시작하자마자 날짜 확인해서 숨기기
-    var today = new Date().toISOString().split('T')[0];
-    if (localStorage.getItem('pm_hide_v8') === today) {{
-        popup.style.display = 'none';
-    }}
+        // 4. 시작할 때 날짜 체크
+        var today = new Date().toISOString().split('T')[0];
+        if (localStorage.getItem('pm_hide_v9') === today) {{
+            popup.style.display = 'none';
+        }}
+    }})();
 </script>
 """
 
@@ -190,6 +203,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
