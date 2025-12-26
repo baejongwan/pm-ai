@@ -102,80 +102,56 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 팝업창 코드 (이벤트 리스너 방식 - 클릭 무조건 작동)
+# [2] 팝업창 코드 (줄바꿈 오류 차단 + 즉시 실행 인라인 방식)
 import streamlit as st
 
-popup_code = f"""
+# 주의: 아래 html_content 변수 안의 내용은 절대 줄바꿈을 하지 마세요.
+# 파이썬 f-string 안에서 줄바꿈이 들어가면 HTML이 깨져서 아까처럼 글자가 화면에 나옵니다.
+
+html_content = f"""
 <style>
-    .popup-overlay {{
+    .pm-overlay {{
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        z-index: 999999;
+        background: rgba(0,0,0,0.7); z-index: 999999;
         display: flex; justify-content: center; align-items: center;
+        backdrop-filter: blur(2px);
     }}
-    .popup-box {{
-        background: white; padding: 0; border-radius: 12px;
-        width: 380px; max-width: 90%;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        overflow: hidden; text-align: center;
+    .pm-box {{
+        background: white; width: 380px; max-width: 90%;
+        border-radius: 12px; overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5); text-align: center;
     }}
-    .popup-img {{ width: 100%; display: block; }}
-    .popup-btn-area {{
-        background-color: #f8f9fa; padding: 15px;
-        display: flex; justify-content: space-between;
-        border-top: 1px solid #eee;
+    .pm-img {{ width: 100%; display: block; }}
+    .pm-btns {{
+        padding: 15px; background: #f8f9fa;
+        display: flex; justify-content: space-between; border-top: 1px solid #eee;
     }}
-    .btn-today {{
-        background: transparent; border: 1px solid #ccc; color: #555;
-        padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;
-    }}
-    .btn-close {{
-        background-color: #333; color: white; border: none;
-        padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px;
-    }}
+    .btn-t {{ background: transparent; border: 1px solid #ccc; padding: 8px 12px; border-radius: 6px; cursor: pointer; }}
+    .btn-c {{ background: #333; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }}
 </style>
 
-<div id="pm-popup-main" class="popup-overlay">
-    <div class="popup-box">
-        <img src="{EVENT_IMAGE_URL}" class="popup-img">
-        <div class="popup-btn-area">
-            <button id="btn-hide-today" class="btn-today">🚫 오늘 하루 안 보기</button>
-            <button id="btn-close-popup" class="btn-close">닫기</button>
+<div id="pm-popup-v7" class="pm-overlay">
+    <div class="pm-box">
+        <img src="{EVENT_IMAGE_URL}" class="pm-img">
+        <div class="pm-btns">
+            <button class="btn-t" onclick="var d=new Date().toISOString().split('T')[0]; localStorage.setItem('pm_pop_v7', d); document.getElementById('pm-popup-v7').style.display='none';">🚫 오늘 하루 안 보기</button>
+            
+            <button class="btn-c" onclick="document.getElementById('pm-popup-v7').style.display='none';">닫기</button>
         </div>
     </div>
 </div>
 
 <script>
-    // (1) 요소 찾아오기
-    const popup = document.getElementById("pm-popup-main");
-    const btnClose = document.getElementById("btn-close-popup");
-    const btnToday = document.getElementById("btn-hide-today");
-
-    // (2) 오늘 날짜 체크
-    const todayDate = new Date().toISOString().split('T')[0];
-    if (localStorage.getItem("pm_popup_v6") === todayDate) {{
-        popup.style.display = "none";
-    }}
-
-    // (3) '닫기' 버튼에 기능 강제 주입
-    if (btnClose) {{
-        btnClose.addEventListener("click", function() {{
-            popup.style.display = "none";
-        }});
-    }}
-
-    // (4) '오늘 안 보기' 버튼에 기능 강제 주입
-    if (btnToday) {{
-        btnToday.addEventListener("click", function() {{
-            localStorage.setItem("pm_popup_v6", todayDate);
-            popup.style.display = "none";
-        }});
+    // 화면 열리자마자 날짜 체크해서 숨기기
+    var d = new Date().toISOString().split('T')[0];
+    if (localStorage.getItem('pm_pop_v7') === d) {{
+        document.getElementById('pm-popup-v7').style.display = 'none';
     }}
 </script>
 """
 
 # [3] 화면에 그리기
-st.markdown(popup_code, unsafe_allow_html=True)
+st.markdown(html_content, unsafe_allow_html=True)
 
 # [4] 나머지 화면 렌더링
 render_home_logo()      
@@ -196,6 +172,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
