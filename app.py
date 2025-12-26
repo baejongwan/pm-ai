@@ -22,20 +22,31 @@ except: genai = None
 from config import *
 
 # --------------------------------------------------------------------------
-# [1] 기본 페이지 설정
+# [1] 기본 페이지 설정 (아이콘 완벽 적용)
 # --------------------------------------------------------------------------
-if os.path.exists("app_icon.png"): icon_path = "app_icon.png"
-elif os.path.exists("home_logo.png"): icon_path = "home_logo.png"
-elif os.path.exists("PMAILOGO.png"): icon_path = "PMAILOGO.png"
-else: icon_path = "💙"
 
+# 1. 깃허브에 있는 'app_icon.png'의 주소 (사장님 저장소 주소)
+ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
+
+# 2. 스트림릿 페이지 설정 (브라우저 탭 아이콘)
 st.set_page_config(
     page_title="PM 파트너스 허브", 
-    page_icon=icon_path, 
+    page_icon=ICON_URL, 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
+# 3. 스마트폰 '홈 화면 추가' 아이콘 강제 적용 (아이폰/갤럭시용)
+# 이 코드가 있어야 스마트폰 바탕화면에서 로고가 크게 잘 보입니다.
+st.markdown(
+    f"""
+    <head>
+        <link rel="apple-touch-icon" href="{ICON_URL}">
+        <link rel="shortcut icon" href="{ICON_URL}">
+    </head>
+    """,
+    unsafe_allow_html=True
+)
 # --------------------------------------------------------------------------
 # [2] 네비게이션 로직 (URL 기준 - 뒤로 가기 해결)
 # --------------------------------------------------------------------------
@@ -143,22 +154,4 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
