@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 숫자칸 옆에 단위 배치)
+# 2. 수익 시뮬레이션 (수정 완료: 사진과 동일한 디자인 적용)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,48 +43,71 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 숫자 입력창 오른쪽에 단위(명, 세대 등)를 바로 붙이는 디자인
+    # [수정된 디자인] 파란색 숫자 박스 라벨 + 입력창 내부 단위 표시 (format 활용)
     # ----------------------------------------------------------------------
     
-    # 스타일 정의: 글자를 굵게 하고, 입력창 높이와 맞추기 위해 위쪽 여백(padding-top)을 줌
-    label_title_style = "text-align: center; font-weight: 900; font-size: 1.1em; margin-bottom: 5px;"
-    unit_text_style = "font-weight: 900; font-size: 1.0em; color: #333; padding-top: 8px;" # padding-top으로 높이 조절
-
-    # 1. 세션 상태 초기화
+    # 1. 세션 상태 초기화 (오류 방지 필수)
     if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
     if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
     if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
 
-    # 2. 전체 3단 컬럼 (큰 틀)
+    # 2. 라벨 스타일 정의 (파란 네모 박스 + 굵은 글씨)
+    def styled_label(num, text):
+        return f"""
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+            <span style="
+                background-color: #007bff; 
+                color: white; 
+                padding: 4px 10px; 
+                border-radius: 4px; 
+                font-weight: bold; 
+                margin-right: 8px;
+                font-size: 1.1em;
+            ">{num}</span>
+            <span style="
+                font-weight: 900; 
+                font-size: 1.2em; 
+                color: #333;
+            ">{text}</span>
+        </div>
+        """
+
+    # 3. 입력창 배치
     c1, c2, c3 = st.columns(3)
     
     # 1️⃣ 직대 파트너
     with c1:
-        st.markdown(f"<div style='{label_title_style}'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
-        # 내부를 다시 [입력창 7 : 글자 3] 비율로 나눔
-        sub_c1, sub_c2 = st.columns([2.5, 1])
-        with sub_c1:
-            my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
-        with sub_c2:
-            st.markdown(f"<div style='{unit_text_style}'>명</div>", unsafe_allow_html=True)
+        st.markdown(styled_label("1", "직대 파트너"), unsafe_allow_html=True)
+        # format="%d 명" -> 숫자 뒤에 '명'이 자동으로 붙어서 나옵니다.
+        my_partners = st.number_input(
+            "직대 파트너", 
+            min_value=1, max_value=50, 
+            key="my_partners_val", 
+            format="%d 명",  # [핵심] 단위가 입력창 안에 들어감
+            label_visibility="collapsed"
+        )
 
     # 2️⃣ 파트너당 복제
     with c2:
-        st.markdown(f"<div style='{label_title_style}'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
-        sub_c1, sub_c2 = st.columns([2.5, 1.2]) # 글자가 좀 길어서 비율 조정
-        with sub_c1:
-            duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
-        with sub_c2:
-            st.markdown(f"<div style='{unit_text_style}'>명씩 소개</div>", unsafe_allow_html=True)
+        st.markdown(styled_label("2", "파트너당 복제"), unsafe_allow_html=True)
+        duplication = st.number_input(
+            "파트너당 복제", 
+            min_value=1, max_value=10, 
+            key="duplication_val", 
+            format="%d 명씩 소개", # [핵심] 단위가 입력창 안에 들어감
+            label_visibility="collapsed"
+        )
 
     # 3️⃣ 계산 깊이
     with c3:
-        st.markdown(f"<div style='{label_title_style}'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
-        sub_c1, sub_c2 = st.columns([2.5, 1.2])
-        with sub_c1:
-            generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
-        with sub_c2:
-            st.markdown(f"<div style='{unit_text_style}'>세대(Lv)</div>", unsafe_allow_html=True)
+        st.markdown(styled_label("3", "계산 깊이"), unsafe_allow_html=True)
+        generations = st.number_input(
+            "계산 깊이", 
+            min_value=1, max_value=6, 
+            key="generations_val", 
+            format="%d 세대(Lv)", # [핵심] 단위가 입력창 안에 들어감
+            label_visibility="collapsed"
+        )
         
     st.markdown("---")
     
