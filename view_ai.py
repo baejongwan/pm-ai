@@ -38,7 +38,7 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
         with st.form("user_info_form"):
             c1, c2 = st.columns(2)
             with c1:
-                age = st.number_input("연령대 (세)", min_value=10, max_value=100, step=10, value=40)
+                age = st.number_input("연령대 (세)", min_value=10, max_value=100, step=1, value=40)
             with c2:
                 gender = st.radio("성별", ["여성", "남성"], horizontal=True)
             
@@ -139,3 +139,4 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
                 except: pass
                 
         st.session_state.messages.append({"role": "assistant", "content": final_response})
+
