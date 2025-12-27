@@ -187,12 +187,9 @@ elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
 
 
+# [버전 확인용 코드 - 확인 후 지우세요]
 import google.generativeai as genai
-import streamlit as st
-
-# 이 코드를 import 밑에 잠시 넣어보세요
-st.error(f"현재 설치된 버전: {genai.__version__}")
-
+st.warning(f"현재 설치된 AI 버전: {genai.__version__}")
 
 # [모델 목록 확인용 코드 - 확인 후 삭제]
 import google.generativeai as genai
@@ -204,6 +201,7 @@ try:
             st.write(f"- {m.name}")
 except Exception as e:
     st.error(f"목록 불러오기 실패: {e}")
+
 
 
 
