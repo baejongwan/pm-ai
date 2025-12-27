@@ -51,11 +51,11 @@ def render_calculator_v2():
     # 라벨 스타일 (제목)
     label_style = """
         text-align: center; 
-        font-weight: 900; 
-        font-size: 1.1em; 
+        font-weight: 800; 
+        font-size: 1.0em; 
         color: #000;
         padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
-        margin-bottom: -5px;  /* 입력창과 틈새 줄이기 */
+        margin-bottom: -3px;  /* 입력창과 틈새 줄이기 */
         position: relative; 
         z-index: 1;
     """
@@ -64,10 +64,10 @@ def render_calculator_v2():
     unit_style = """
         text-align: center; 
         font-weight: 800; 
-        font-size: 0.95em; 
+        font-size: 0.80em; 
         color: #444; 
         padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
-        margin-top: -20px;     /* 입력창과 틈새 줄이기 */
+        margin-top: -25px;     /* 입력창과 틈새 줄이기 */
         position: relative;
         z-index: 1;
     """
