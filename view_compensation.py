@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 텍스트 위치 미세 조정 + 굵기 강화)
+# 2. 수익 시뮬레이션 (수정 완료: 숫자칸 옆에 단위 배치)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,40 +43,48 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 
-    # 1. 텍스트 정렬 보정: 오른쪽 버튼 너비만큼 padding-right를 줘서 왼쪽으로 이동
-    # 2. 글자 굵기: font-weight: 900 (아주 굵게) 적용
+    # [수정된 부분] 숫자 입력창 오른쪽에 단위(명, 세대 등)를 바로 붙이는 디자인
     # ----------------------------------------------------------------------
     
-    # 스타일 정의 (오른쪽 버튼 크기 약 2.5rem 만큼 여백을 주어 시각적 중앙 맞춤)
-    label_style = "text-align: center; font-weight: 900; font-size: 1.1em; margin-bottom:5px; padding-right: 2.5rem;"
-    unit_style = "text-align: center; font-weight: bold; font-size: 0.9em; color:#333; padding-right: 2.5rem;"
+    # 스타일 정의: 글자를 굵게 하고, 입력창 높이와 맞추기 위해 위쪽 여백(padding-top)을 줌
+    label_title_style = "text-align: center; font-weight: 900; font-size: 1.1em; margin-bottom: 5px;"
+    unit_text_style = "font-weight: 900; font-size: 1.0em; color: #333; padding-top: 8px;" # padding-top으로 높이 조절
 
     # 1. 세션 상태 초기화
     if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
     if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
     if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
 
-    # 2. 3단 컬럼 레이아웃
+    # 2. 전체 3단 컬럼 (큰 틀)
     c1, c2, c3 = st.columns(3)
     
     # 1️⃣ 직대 파트너
     with c1:
-        st.markdown(f"<div style='{label_style}'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
-        my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
-        st.markdown(f"<div style='{unit_style}'>명</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='{label_title_style}'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
+        # 내부를 다시 [입력창 7 : 글자 3] 비율로 나눔
+        sub_c1, sub_c2 = st.columns([2.5, 1])
+        with sub_c1:
+            my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
+        with sub_c2:
+            st.markdown(f"<div style='{unit_text_style}'>명</div>", unsafe_allow_html=True)
 
     # 2️⃣ 파트너당 복제
     with c2:
-        st.markdown(f"<div style='{label_style}'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
-        duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
-        st.markdown(f"<div style='{unit_style}'>명씩 소개</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='{label_title_style}'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
+        sub_c1, sub_c2 = st.columns([2.5, 1.2]) # 글자가 좀 길어서 비율 조정
+        with sub_c1:
+            duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
+        with sub_c2:
+            st.markdown(f"<div style='{unit_text_style}'>명씩 소개</div>", unsafe_allow_html=True)
 
     # 3️⃣ 계산 깊이
     with c3:
-        st.markdown(f"<div style='{label_style}'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
-        generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
-        st.markdown(f"<div style='{unit_style}'>세대(Level)</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='{label_title_style}'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
+        sub_c1, sub_c2 = st.columns([2.5, 1.2])
+        with sub_c1:
+            generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
+        with sub_c2:
+            st.markdown(f"<div style='{unit_text_style}'>세대(Lv)</div>", unsafe_allow_html=True)
         
     st.markdown("---")
     
