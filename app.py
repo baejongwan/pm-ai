@@ -66,40 +66,66 @@ styles.apply_custom_css()
 all_sheets = load_excel()
 
 # --------------------------------------------------------------------------
-# [4] 화면 구성 함수들
+# [4] 화면 구성 함수들 (수정됨: 새로고침 방지 네비게이션)
 # --------------------------------------------------------------------------
-def render_home_logo():
-    if current_url_page == "홈":
-        logo_path = None
-        if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
-        elif os.path.exists("PMAILOGO.png"): logo_path = "PMAILOGO.png"
-        
-        if logo_path:
-            with open(logo_path, "rb") as f:
-                img_b64 = base64.b64encode(f.read()).decode()
-            st.markdown(f"""
-                <div style="display: flex; justify-content: center; padding-top: 10px; padding-bottom: 5px;">
-                    <img src="data:image/png;base64,{img_b64}" style="width: 120px; object-fit: contain;">
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-                <h3 style='text-align:center; color:#003057; margin-top:10px; margin-bottom:5px;'>
-                    PM Partners
-                </h3>
-            """, unsafe_allow_html=True)
-
 def render_top_navigation():
+    # 메뉴 목록
     menu_options = [
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
-    html_nav = '<div class="nav-container">'
-    for option in menu_options:
-        active_class = "active" if option == current_url_page else ""
-        html_nav += f'<a href="?page={option}" target="_self" class="nav-link {active_class}">{option}</a>'
-    html_nav += '</div>'
-    st.markdown(html_nav, unsafe_allow_html=True)
+    
+    # CSS: 버튼을 메뉴바처럼 예쁘게 꾸미기
+    st.markdown("""
+        <style>
+        /* 버튼 사이 간격 조절 */
+        div[data-testid="column"] { padding: 0 !important; margin: 0 !important; }
+        
+        /* 버튼 기본 스타일 (투명하고 깔끔하게) */
+        div.stButton > button {
+            width: 100%;
+            border-radius: 0px;
+            border: none;
+            background-color: transparent;
+            color: #555;
+            font-weight: 600;
+            padding: 10px 0;
+            border-bottom: 3px solid transparent; /* 밑줄 효과 준비 */
+            transition: all 0.3s;
+        }
+        
+        /* 마우스 올렸을 때 */
+        div.stButton > button:hover {
+            color: #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        /* 모바일 화면 대응 (글자 크기 조절) */
+        @media (max-width: 768px) {
+            div.stButton > button { font-size: 12px; padding: 5px 0; }
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # 메뉴 개수만큼 칸 나누기
+    cols = st.columns(len(menu_options))
+    
+    # 현재 보고 있는 페이지 확인
+    current_page = st.session_state.get("page", "홈")
+
+    for i, option in enumerate(menu_options):
+        # 현재 선택된 메뉴인지 확인
+        is_active = (current_page == option)
+        
+        # 버튼 그리기
+        # (type="primary"를 쓰면 선택된 메뉴가 붉은색/테마색으로 강조됩니다)
+        btn_type = "primary" if is_active else "secondary"
+        
+        # 버튼을 클릭하면? -> 페이지 이동 (새로고침 없이!)
+        if cols[i].button(option, key=f"nav_{i}", type=btn_type, use_container_width=True):
+            st.session_state.page = option   # 1. 내부 기억 장치에 페이지 저장
+            st.query_params["page"] = option # 2. 주소창 주소 변경
+            st.rerun()                       # 3. 화면만 살짝 다시 그리기
 
 # --------------------------------------------------------------------------
 # [5] 실행 (서버 목록에 있는 확실한 모델 이름 사용)
@@ -158,6 +184,7 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
 
