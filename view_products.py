@@ -1,7 +1,9 @@
 import streamlit as st
+import pandas as pd
 import re
 from utils import get_optimized_image
 from func import get_sheet_data
+from components import apply_custom_styles
 
 # --------------------------------------------------------------------------
 # 1. 제품 소개 (기존과 동일)
@@ -197,4 +199,5 @@ def render_diagnosis(all_sheets):
                 st.warning("엑셀 오류: '맛' 시트에는 최소 2개의 열(맛 종류, 설명)이 필요합니다.")
         else:
             st.info("데이터 없음: 엑셀 시트 이름을 '맛' 또는 '맛체크'로 확인해주세요.")
+
 
