@@ -14,8 +14,9 @@ import view_guide
 import view_compensation
 import view_stories
 from utils import load_excel
-from config import * # [수정 완료] 줄바꿈 오류 해결
-warnings.filterwarnings("ignore")
+
+# [오류 해결] 여기서 두 줄이 붙어있던 것을 떼어냈습니다.
+from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -30,7 +31,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 세션 초기화 (메뉴바 동작을 위해 필수 - 가장 먼저 실행)
+# 세션 초기화 (가장 먼저 실행)
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
@@ -81,7 +82,7 @@ def render_home_logo():
             """, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# [4] 상단 고정형 메뉴바 (인덱스 자동 추적 적용됨)
+# [4] 상단 고정형 메뉴바 (인덱스 자동 추적)
 # --------------------------------------------------------------------------
 def render_top_navigation():
     menu_options = [
@@ -92,7 +93,6 @@ def render_top_navigation():
     menu_icons = ["house", "robot", "calculator", "diagram-3", "cart", 
                   "shield-check", "activity", "heart-pulse", "people", "trophy", "file-earmark-pdf"]
 
-    # 현재 페이지 위치 찾기 (채팅 시 메뉴 풀림 방지)
     current_page = st.session_state.get("page", "홈")
     try:
         current_index = menu_options.index(current_page)
@@ -124,9 +124,7 @@ def render_top_navigation():
 # [5] 팝업창 및 AI 설정
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-
-# [중요] 사장님 계정에서 확인된 최신 모델 (2.5 버전)
-selected_model = "gemini-2.5-flash"
+selected_model = "gemini-2.5-flash" # [확인] 사장님 전용 최신 모델
 
 if api_key:
     try:
@@ -151,12 +149,10 @@ def show_promo_window():
 render_home_logo()
 selected_page = render_top_navigation()
 
-# 메뉴 클릭 시 페이지 이동 처리
 if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
-# 홈 팝업 처리
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
@@ -175,5 +171,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-
