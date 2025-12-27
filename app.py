@@ -96,52 +96,33 @@ def render_top_navigation():
 
     st.markdown("""
         <style>
-        .menu-bar {
+        .menu-container {
             display: flex;
-            flex-wrap: wrap;              /* 공간 부족하면 자동 줄바꿈 */
-            justify-content: center;      /* 항상 가운데 정렬 */
-            gap: 8px;                     /* 버튼 간격 */
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
             padding: 10px 0;
         }
-        .menu-bar button {
-            padding: 6px 14px;
-            border-radius: 50px;
-            border: 1px solid #ddd;
-            background-color: white;
-            color: #555;
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;          /* 글자 줄바꿈 방지 */
-            cursor: pointer;
-        }
-        .menu-bar button:hover {
-            border-color: #007bff;
-            color: #007bff;
-            background-color: #f0f8ff;
-        }
-        .menu-bar button.active {
-            border-color: #007bff;
-            color: #007bff;
-            background-color: #e7f1ff;
+        .menu-container > div {
+            flex: 0 0 auto;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 현재 페이지 상태 확인
-    current_page = st.session_state.page
+    # 버튼을 flexbox 컨테이너 안에 배치
+    st.markdown('<div class="menu-container">', unsafe_allow_html=True)
+    for i, option in enumerate(menu_options):
+        is_active = (st.session_state.page == option)
+        btn_type = "primary" if is_active else "secondary"
+        st.button(
+            option,
+            key=f"nav_{i}",
+            type=btn_type,
+            on_click=change_page,
+            args=(option,)
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # 버튼을 HTML로 출력
-    buttons_html = "<div class='menu-bar'>"
-    for option in menu_options:
-        active_class = "active" if current_page == option else ""
-        buttons_html += f"""
-            <form action="#" method="post" style="display:inline;">
-                <button class="{active_class}" name="page" value="{option}">{option}</button>
-            </form>
-        """
-    buttons_html += "</div>"
-
-    st.markdown(buttons_html, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
 # [5] 실행 설정
@@ -193,4 +174,5 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
