@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# [핵심] 아이콘 코드가 매번 실행되어 새로고침 유발하는 것을 방지 (최초 1회만 실행)
+# 아이콘 고정 로직 (새로고침 방지)
 if "icon_fixed" not in st.session_state:
     st.markdown(
         f"""
@@ -51,13 +51,12 @@ if "icon_fixed" not in st.session_state:
     st.session_state.icon_fixed = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직 (URL 대신 내부 기억 장치 사용)
+# [2] 네비게이션 로직 (내부 기억 장치 사용)
 # --------------------------------------------------------------------------
-# URL(?page=...) 방식은 새로고침을 유발하므로 제거하고 session_state만 씁니다.
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
-# 페이지 변경 함수 (새로고침 없이 화면만 전환)
+# 페이지 변경 함수
 def change_page(page_name):
     st.session_state.page = page_name
 
@@ -71,7 +70,6 @@ all_sheets = load_excel()
 # [4] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
-    # 홈 화면일 때만 로고 표시
     if st.session_state.page == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
@@ -98,37 +96,37 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인 해결의 핵심] CSS로 강제 가로 정렬 & 줄바꿈 허용
+    # [디자인 핵심 수정] 모바일 중앙 정렬 & 자동 줄바꿈 CSS
     st.markdown("""
         <style>
-        /* 1. 버튼들을 감싸는 컨테이너가 좁아져도 줄바꿈(wrap) 되도록 설정 */
+        /* 1. 버튼들을 감싸는 전체 틀을 'Flexbox'로 만듭니다. */
         div[data-testid="stHorizontalBlock"] {
-            flex-wrap: wrap !important;
-            gap: 6px !important;
+            display: flex !important;
+            flex-wrap: wrap !important;      /* 공간 부족하면 다음 줄로 */
+            justify-content: center !important; /* ★중앙 정렬 핵심★ */
+            gap: 6px !important;             /* 버튼 사이 간격 */
             padding-bottom: 10px;
-            justify-content: center; /* 버튼들 가운데 정렬 */
         }
         
-        /* 2. 기둥(Column)의 너비를 내용물만큼만 차지하게 강제 설정 */
-        /* 이게 없으면 모바일에서 100% 폭을 차지해서 세로로 쌓임 */
+        /* 2. 기둥(Column)이 멋대로 늘어나지 못하게 막습니다. */
         div[data-testid="column"] {
-            width: auto !important;
-            flex: 0 1 auto !important;
-            min-width: fit-content !important;
+            flex: 0 1 auto !important;  /* 내용물 크기만큼만 차지 */
+            width: auto !important;     /* 가로 꽉 채우기 금지 */
+            min-width: 0 !important;    /* 최소 너비 제한 해제 */
         }
         
-        /* 3. 버튼 스타일 (작고 예쁜 알약 모양) */
+        /* 3. 버튼 스타일 (알약 모양) */
         div.stButton > button {
-            width: auto !important;    /* 글자 크기만큼만 너비 차지 */
+            width: auto !important;
             height: auto !important;
-            padding: 5px 12px !important;
+            padding: 6px 16px !important; /* 좌우 여백을 넉넉히 줌 */
             font-size: 14px !important;
-            font-weight: 500 !important;
             border-radius: 20px !important; /* 둥근 알약 */
             border: 1px solid #e0e0e0;
             background-color: white;
             color: #555;
             margin: 0 !important;
+            white-space: nowrap !important; /* 글자 줄바꿈 금지 */
         }
 
         /* 4. 마우스 올렸을 때 */
@@ -138,24 +136,32 @@ def render_top_navigation():
             background-color: #f0f8ff;
         }
         
-        /* 5. 선택된 버튼 강조 (Primary) */
+        /* 5. 선택된 버튼 강조 */
         div.stButton > button:focus:not(:active) {
             border-color: #007bff;
             color: #007bff;
+            background-color: #e7f1ff;
+        }
+        
+        /* 6. 모바일 화면 미세 조정 */
+        @media (max-width: 400px) {
+            div.stButton > button {
+                padding: 5px 10px !important;
+                font-size: 12px !important;
+            }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 버튼들을 화면에 배치
+    # 버튼 배치
     cols = st.columns(len(menu_options))
     current_page = st.session_state.page
 
     for i, option in enumerate(menu_options):
-        # 현재 선택된 페이지인지 확인
         is_active = (current_page == option)
         btn_type = "primary" if is_active else "secondary"
         
-        # [기능 유지] st.button + on_click 사용 (새로고침 절대 안 됨!)
+        # [기능 유지] st.button 사용 (새로고침 방지)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
@@ -188,7 +194,7 @@ def show_promo_window():
     if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
-# [3] 팝업 실행 로직 (홈 화면 진입 시 1회만)
+# [3] 팝업 실행 로직
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
@@ -199,7 +205,7 @@ render_home_logo()
 render_top_navigation()
 
 # --------------------------------------------------------------------------
-# [6] 페이지 내용 표시 (기억된 페이지 보여주기)
+# [6] 페이지 내용 표시
 # --------------------------------------------------------------------------
 target_page = st.session_state.page
 
