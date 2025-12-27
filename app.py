@@ -34,7 +34,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-if "icon_fixed" not in st.session_state:
+# 아이콘 및 매니페스트 (최초 1회만 실행하도록 조건문 추가)
+if "head_set" not in st.session_state:
     st.markdown(
         f"""
         <link rel="manifest" href="{MANIFEST_URL}">
@@ -47,16 +48,14 @@ if "icon_fixed" not in st.session_state:
         """,
         unsafe_allow_html=True
     )
-    st.session_state.icon_fixed = True
+    st.session_state.head_set = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직
+# [2] 네비게이션 로직 (URL 쿼리 파라미터 방식 복구)
 # --------------------------------------------------------------------------
-if "page" not in st.session_state:
-    st.session_state.page = "홈"
-
-def change_page(page_name):
-    st.session_state.page = page_name
+# URL에서 '?page=값'을 가져옵니다. 없으면 '홈'입니다.
+query_params = st.query_params
+current_page = query_params.get("page", "홈")
 
 # --------------------------------------------------------------------------
 # [3] 스타일 및 데이터 로딩
@@ -65,10 +64,11 @@ styles.apply_custom_css()
 all_sheets = load_excel()
 
 # --------------------------------------------------------------------------
-# [4] 화면 구성 함수들
+# [4] 화면 구성 함수들 (로고 및 네비게이션)
 # --------------------------------------------------------------------------
 def render_home_logo():
-    if st.session_state.page == "홈":
+    # 홈 화면일 때만 로고 표시
+    if current_page == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
         elif os.path.exists("PMAILOGO.png"): logo_path = "PMAILOGO.png"
@@ -94,100 +94,57 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [★ 사장님 아이디어 적용: 글자 크기에 딱 맞추기 (fit-content) ★]
-    st.markdown("""
-        <style>
-        /* 1. 메뉴바 전체 틀: "줄바꿈(wrap)"을 가장 강력하게 적용 */
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-wrap: wrap !important;        /* 공간 없으면 무조건 다음 줄로! */
-            justify-content: center !important; /* 가운데 정렬 */
-            gap: 6px !important;               /* 버튼 사이 간격 */
-            padding-bottom: 10px !important;
-            width: 100% !important;
-        }
-
-        /* 2. 버튼이 들어가는 '방(Column)': 글자 크기에 딱 맞춰라! */
-        div[data-testid="column"] {
-            flex: 0 0 auto !important;          /* 늘어나지 마! (0) */
-            width: auto !important;             /* 100% 차지하지 마! */
-            min-width: fit-content !important;  /* ★핵심: 글자 내용물 크기에 딱 맞춰라! */
-            max-width: fit-content !important;  /* 너도나도 글자 크기만큼만! */
-        }
-
-        /* 3. 모바일 화면에서 Streamlit이 강제로 100% 늘리는 것 차단 */
-        @media (max-width: 640px) {
-            div[data-testid="column"] {
-                width: auto !important;
-                min-width: fit-content !important;
-                flex: 0 0 auto !important;
-            }
-            /* 모바일에서도 가로 배치 유지 */
-            div[data-testid="stHorizontalBlock"] {
-                flex-direction: row !important;
-                display: flex !important;
-                flex-wrap: wrap !important;
-            }
-        }
-
-        /* 4. 버튼 디자인 (알약 모양) */
-        div.stButton > button {
-            width: auto !important;             /* 버튼 너비도 글자에 맞춤 */
-            height: auto !important;
-            padding: 6px 14px !important;
-            border-radius: 50px !important;
-            border: 1px solid #e0e0e0;
-            background-color: white;
-            color: #555;
-            font-size: 14px !important;
-            font-weight: 600;
-            margin: 0 !important;
-            white-space: nowrap !important;     /* ★절대 두 줄로 깨지지 않게 함★ */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        /* 마우스 호버 */
-        div.stButton > button:hover {
-            border-color: #007bff;
-            color: #007bff;
-            background-color: #f0f8ff;
-        }
-
-        /* 클릭 시 */
-        div.stButton > button:focus:not(:active) {
-            border-color: #007bff;
-            color: #007bff;
-            background-color: #e7f1ff;
-        }
-        
-        /* 5. 아주 작은 폰트 대응 */
-        @media (max-width: 400px) {
-            div.stButton > button {
-                padding: 4px 10px !important;
-                font-size: 13px !important;
-            }
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # 컬럼 생성 및 버튼 배치
-    cols = st.columns(len(menu_options))
-    current_page = st.session_state.page
-
-    for i, option in enumerate(menu_options):
-        is_active = (current_page == option)
-        btn_type = "primary" if is_active else "secondary"
-        
-        cols[i].button(
-            option, 
-            key=f"nav_{i}", 
-            type=btn_type, 
-            on_click=change_page, 
-            args=(option,)
-        )
+    # [디자인] 사장님이 만족하셨던 그 HTML/CSS 코드입니다.
+    html_nav = """
+    <style>
+    .nav-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        padding-bottom: 10px;
+    }
+    .nav-link {
+        text-decoration: none;
+        color: #555;
+        background-color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        white-space: nowrap; /* 글자 줄바꿈 방지 */
+    }
+    .nav-link:hover {
+        background-color: #f0f8ff;
+        color: #007bff;
+        border-color: #007bff;
+    }
+    .nav-link.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    /* 모바일 반응형 */
+    @media (max-width: 400px) {
+        .nav-link { font-size: 12px; padding: 5px 10px; }
+    }
+    </style>
+    <div class="nav-container">
+    """
+    
+    for option in menu_options:
+        active_class = "active" if option == current_page else ""
+        # target="_self"는 현재 창에서 페이지를 이동합니다.
+        html_nav += f'<a href="?page={option}" target="_self" class="nav-link {active_class}">{option}</a>'
+    
+    html_nav += '</div>'
+    st.markdown(html_nav, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# [5] 실행 설정
+# [5] 팝업창 및 기본 실행
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
 selected_model = "gemini-flash-latest"
@@ -197,12 +154,11 @@ if api_key:
         import google.generativeai as genai
         genai.configure(api_key=api_key)
     except Exception as e:
-        print(f"모델 설정 오류: {e}")
-        
-# [1] 7주년 행사 포스터 주소
+        pass
+
+# 팝업 로직 (세션 사용하여 1회만 표시)
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 정식 팝업창 기능
 @st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
@@ -210,20 +166,19 @@ def show_promo_window():
     if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
-# [3] 팝업 실행 로직
 if "home_popup_shown" not in st.session_state:
-    if st.session_state.page == "홈":
+    if current_page == "홈":
         show_promo_window()
         st.session_state["home_popup_shown"] = True
 
-# [4] 화면 렌더링
+# 화면 그리기
 render_home_logo()      
 render_top_navigation()
 
 # --------------------------------------------------------------------------
-# [6] 페이지 내용 표시
+# [6] 페이지 라우팅 (페이지 연결)
 # --------------------------------------------------------------------------
-target_page = st.session_state.page
+target_page = current_page
 
 if target_page == "홈": view_home.render_home_dashboard(all_sheets)
 elif target_page == "AI상담": view_ai.render_ai_assistant(api_key, selected_model, all_sheets)
