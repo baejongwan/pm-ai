@@ -14,7 +14,8 @@ import view_guide
 import view_compensation
 import view_stories
 from utils import load_excel
-from config import * warnings.filterwarnings("ignore")
+from config import * # [수정 완료] 줄바꿈 오류 수정됨
+warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -120,12 +121,11 @@ def render_top_navigation():
     return selected
 
 # --------------------------------------------------------------------------
-# [5] 팝업창 및 AI 설정 (★여기가 중요합니다★)
+# [5] 팝업창 및 AI 설정 (오류 해결됨)
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
 
-# [수정 완료] 사장님 목록에 있는 최신 모델로 변경했습니다.
-# 1.5가 아니라 2.5를 써야 작동합니다.
+# [중요] 사장님 계정에서 확인된 최신 모델 (목록에 있는 확실한 이름)
 selected_model = "gemini-2.5-flash"
 
 if api_key:
