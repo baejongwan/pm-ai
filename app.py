@@ -190,6 +190,16 @@ elif target_page == "성공사례": view_stories.render_success(all_sheets)
 import google.generativeai as genai
 st.warning(f"현재 설치된 AI 버전: {genai.__version__}")
 
+# [모델 목록 확인용 코드 - 확인 후 삭제]
+import google.generativeai as genai
+try:
+    genai.configure(api_key=api_key)
+    st.write("📋 사용 가능한 모델 목록:")
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            st.write(f"- {m.name}")
+except Exception as e:
+    st.error(f"목록 불러오기 실패: {e}")
 
 
 
