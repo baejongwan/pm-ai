@@ -194,22 +194,17 @@ import streamlit as st
 st.error(f"현재 설치된 버전: {genai.__version__}")
 
 
-# [진단 코드] 내 키로 사용 가능한 모델 목록 출력하기
+# [모델 목록 확인용 코드 - 확인 후 삭제]
+import google.generativeai as genai
 try:
-    # 1. API 키 설정 (config에서 가져온 api_key 변수 사용)
-    # 주의: 함수 안이라면 api_key를 인자로 받아야 합니다.
-    genai.configure(api_key=api_key) 
-    
-    st.write("--- 📋 사용 가능한 모델 목록 ---")
-    available_models = []
+    genai.configure(api_key=api_key)
+    st.write("📋 사용 가능한 모델 목록:")
     for m in genai.list_models():
         if 'generateContent' in m.supported_generation_methods:
-            available_models.append(m.name)
             st.write(f"- {m.name}")
-    st.write("---------------------------------")
-    
 except Exception as e:
-    st.error(f"모델 목록을 가져오는 데 실패했습니다: {e}")
+    st.error(f"목록 불러오기 실패: {e}")
+
 
 
 
