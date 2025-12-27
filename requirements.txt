@@ -1,11 +1,9 @@
 streamlit
 pandas
 openpyxl
-pymupdf
-streamlit-pdf-viewer
-Pillow
-google-generativeai>=0.7.0
 gspread
 oauth2client
 streamlit-option-menu
+pytz
+google-generativeai>=0.7.0
 
