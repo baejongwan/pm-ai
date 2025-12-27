@@ -50,7 +50,7 @@ if "icon_fixed" not in st.session_state:
     st.session_state.icon_fixed = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직
+# [2] 네비게이션 로직 (기억 유지 + 새로고침 방지)
 # --------------------------------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "홈"
@@ -94,73 +94,66 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인 해결의 끝판왕] 모바일 강제 가로 배치 CSS
+    # [★디자인 수정의 핵심★] 겹침 방지 + 자연스러운 줄바꿈 + 중앙 정렬
     st.markdown("""
         <style>
-        /* 1. 메뉴바 전체 컨테이너 설정 */
-        /* 화면이 좁아도 무조건 가로(row)로 배치하고, 넘치면 줄바꿈(wrap) 하라 */
+        /* 1. 메뉴 컨테이너: 가로 배치, 줄바꿈 허용, 가운데 정렬 */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
-            flex-direction: row !important; 
-            flex-wrap: wrap !important;
-            justify-content: center !important; /* 중앙 정렬 */
-            gap: 6px !important;
-            padding-bottom: 10px;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;      /* 공간 부족하면 다음 줄로 넘어감 */
+            justify-content: center !important; /* 버튼들 가운데 모으기 */
+            gap: 8px !important;             /* 버튼 사이 간격 */
+            padding-bottom: 10px !important;
         }
 
-        /* 2. 개별 버튼 기둥(Column) 설정 - ★여기가 핵심입니다★ */
-        /* 모바일(화면폭 640px 이하)에서도 절대 100% 폭을 갖지 않도록 강제함 */
+        /* 2. 기둥(Column): 글자 겹침 방지 및 크기 자동 조절 */
         div[data-testid="column"] {
-            flex: 0 1 auto !important; /* 크기 자동 조절 */
-            width: auto !important;     /* 내용물만큼만 너비 차지 */
-            min-width: 0px !important;  /* 최소 너비 제한 해제 */
-            max-width: 100% !important;
+            flex: 0 0 auto !important;          /* 크기 고정 안함 (내용물에 맞춤) */
+            width: auto !important;             /* 가로 100% 금지 */
+            min-width: max-content !important;  /* ★핵심★ 글자 크기만큼은 무조건 자리 확보 (겹침 방지) */
         }
         
-        /* 3. Streamlit의 기본 모바일 반응형 동작 무력화 */
-        @media (max-width: 640px) {
-            div[data-testid="column"] {
-                width: auto !important;
-                min-width: auto !important;
-            }
-        }
-
-        /* 4. 버튼 디자인 (알약 모양) */
+        /* 3. 버튼 디자인: 알약 모양 */
         div.stButton > button {
             width: auto !important;
             height: auto !important;
-            padding: 6px 14px !important;
-            border-radius: 50px !important; /* 둥근 알약 */
+            padding: 6px 15px !important;
+            border-radius: 50px !important;     /* 둥근 알약 */
             border: 1px solid #ddd;
             background-color: white;
             color: #555;
             font-size: 14px !important;
             font-weight: 600;
             margin: 0 !important;
-            white-space: nowrap !important; /* 글자 줄바꿈 금지 */
-            line-height: 1.2 !important;
+            white-space: nowrap !important;     /* 버튼 내 줄바꿈 금지 */
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        /* 5. 마우스 호버 효과 */
+        /* 4. 마우스 호버 효과 */
         div.stButton > button:hover {
             border-color: #007bff;
             color: #007bff;
             background-color: #f0f8ff;
         }
-
-        /* 6. 선택된 버튼 강조 */
+        
+        /* 5. 클릭 시 강조 */
         div.stButton > button:focus:not(:active) {
             border-color: #007bff;
             color: #007bff;
             background-color: #e7f1ff;
         }
         
-        /* 7. 초소형 화면(갤럭시 폴드 접었을 때 등) 폰트 조절 */
-        @media (max-width: 380px) {
+        /* 6. 모바일 화면 최적화 */
+        @media (max-width: 640px) {
+            /* 모바일에서도 강제로 중앙 정렬 유지 */
+            div[data-testid="stHorizontalBlock"] {
+                justify-content: center !important;
+                gap: 6px !important;
+            }
             div.stButton > button {
-                padding: 4px 10px !important;
-                font-size: 12px !important;
+                padding: 5px 12px !important;
+                font-size: 13px !important;
             }
         }
         </style>
@@ -174,7 +167,7 @@ def render_top_navigation():
         is_active = (current_page == option)
         btn_type = "primary" if is_active else "secondary"
         
-        # 버튼 생성 (새로고침 방지, 기능 유지)
+        # 버튼 기능 연결 (새로고침 방지)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
