@@ -14,15 +14,12 @@ import view_guide
 import view_compensation
 import view_stories
 from utils import load_excel
+from config import * # config에서 API 키 가져오기
 
 warnings.filterwarnings("ignore")
-try: import google.generativeai as genai
-except: genai = None
-
-from config import *
 
 # --------------------------------------------------------------------------
-# [1] 기본 페이지 설정
+# [1] 기본 페이지 및 세션 설정 (가장 먼저 실행해야 함)
 # --------------------------------------------------------------------------
 ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
@@ -33,6 +30,10 @@ st.set_page_config(
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
+
+# [수정 1] 세션 초기화를 맨 위로 올렸습니다. (메뉴바가 페이지를 알기 위해)
+if "page" not in st.session_state:
+    st.session_state.page = "홈"
 
 # 아이콘 및 메타태그
 if "head_set" not in st.session_state:
@@ -60,6 +61,7 @@ all_sheets = load_excel()
 # [3] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
+    # 홈 화면일 때만 로고 표시
     if st.session_state.get("page", "홈") == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
@@ -90,11 +92,12 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # 아이콘 설정
+    # 아이콘
     menu_icons = ["house", "robot", "calculator", "diagram-3", "cart", 
                   "shield-check", "activity", "heart-pulse", "people", "trophy", "file-earmark-pdf"]
 
-    # [수정된 부분] 현재 세션 상태에 맞는 인덱스 찾기
+    # [수정 2] 현재 페이지가 메뉴의 몇 번째인지 찾습니다.
+    # 이렇게 해야 채팅을 쳐도 메뉴가 '홈'으로 돌아가지 않고 'AI상담'에 고정됩니다.
     current_page = st.session_state.get("page", "홈")
     try:
         current_index = menu_options.index(current_page)
@@ -106,7 +109,7 @@ def render_top_navigation():
         menu_title=None, 
         options=menu_options,
         icons=menu_icons,
-        default_index=current_index,  # [중요] 0이 아니라 현재 페이지 번호를 넣어야 함
+        default_index=current_index,  # [중요] 0 대신 계산된 번호를 넣음
         orientation="horizontal",
         
         # [디자인 커스텀]
@@ -127,11 +130,13 @@ def render_top_navigation():
     return selected
 
 # --------------------------------------------------------------------------
-# [5] 팝업창 및 AI 설정
+# [5] 팝업창 및 AI 설정 (오류 수정됨)
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-# [수정] 모델명은 최신 모델로 고정 (필요시 변경 가능)
-selected_model = "gemini-1.5-flash" 
+
+# [수정 3] 모델 이름을 가장 확실한 정식 명칭으로 변경
+# gemini-flash-latest (X) -> gemini-1.5-flash (O)
+selected_model = "gemini-1.5-flash"
 
 if api_key:
     try:
@@ -153,28 +158,24 @@ def show_promo_window():
 # [6] 화면 렌더링 및 페이지 연결
 # --------------------------------------------------------------------------
 
-# 1. 세션 초기화 (가장 먼저 실행)
-if "page" not in st.session_state:
-    st.session_state.page = "홈"
-
-# 2. 로고 표시
+# 1. 로고 표시
 render_home_logo()
 
-# 3. 메뉴바 표시 (현재 페이지 정보를 기반으로 그려짐)
+# 2. 메뉴바 표시 (현재 페이지를 인식해서 그려짐)
 selected_page = render_top_navigation()
 
-# 4. 페이지 이동 로직 (메뉴를 클릭했을 때만 실행)
+# [수정 4] 메뉴를 클릭했을 때만 페이지 변경 로직 실행
 if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
-# 5. 팝업 로직
+# 3. 팝업 로직 (홈 화면일 때만)
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
         st.session_state["home_popup_shown"] = True
 
-# 6. 실제 페이지 내용 표시
+# 4. 실제 페이지 내용 표시
 target_page = st.session_state.page
 
 if target_page == "홈": view_home.render_home_dashboard(all_sheets)
@@ -203,6 +204,7 @@ try:
             st.write(f"- {m.name}")
 except Exception as e:
     st.error(f"목록 불러오기 실패: {e}")
+
 
 
 
