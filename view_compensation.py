@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 오류 해결 + 파란색 라벨 디자인)
+# 2. 수익 시뮬레이션 (수정 완료: 오류 해결 + 분리형 디자인 적용)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,7 +43,7 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 오류 원인(format 텍스트) 제거 및 레이아웃 최적화
+    # [수정된 부분] 오류 원인(format) 제거하고 '단위 박스'를 옆에 붙이는 디자인
     # ----------------------------------------------------------------------
     
     # 1. 세션 상태 초기화
@@ -51,78 +51,65 @@ def render_calculator_v2():
     if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
     if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
 
-    # 2. 라벨 디자인 함수 (파란색 네모 박스)
+    # 2. 파란색 라벨 스타일 (사진과 동일)
     def styled_label(num, text):
         return f"""
-        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 0px;">
-            <span style="
-                background-color: #007bff; 
-                color: white; 
-                padding: 2px 8px; 
-                border-radius: 4px; 
-                font-weight: bold; 
-                margin-right: 6px;
-                font-size: 1.0em;
-            ">{num}</span>
-            <span style="
-                font-weight: 900; 
-                font-size: 1.1em; 
-                color: #333;
-            ">{text}</span>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+            <span style="background-color: #007bff; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-right: 6px; font-size: 1.0em;">{num}</span>
+            <span style="font-weight: 900; font-size: 1.1em; color: #333;">{text}</span>
         </div>
         """
 
-    # 3. 입력창 배치
+    # 3. 단위 박스 스타일 (숫자칸 옆에 붙을 회색 테두리 박스)
+    def unit_box(text):
+        return f"""
+        <div style="
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 42px; 
+            border: 1px solid #d6d6d6; 
+            border-radius: 4px; 
+            background-color: #f9f9f9; 
+            font-weight: bold; 
+            color: #555; 
+            font-size: 0.9em;
+            margin-top: 0px;
+        ">
+            {text}
+        </div>
+        """
+
+    # 4. 입력창 배치 (3단 컬럼)
     c1, c2, c3 = st.columns(3)
     
-    # [스타일] 단위 텍스트가 입력창 숫자와 높이가 맞도록 padding-top 설정
-    unit_style = "font-weight: bold; font-size: 0.9em; color: #555; padding-top: 12px;"
-
-    # 1️⃣ 직대 파트너
+    # [1] 직대 파트너
     with c1:
         st.markdown(styled_label("1", "직대 파트너"), unsafe_allow_html=True)
-        # 화면 분할: [입력창 75%] [단위 25%]
-        sub_c1, sub_c2 = st.columns([3, 1])
-        with sub_c1:
-            my_partners = st.number_input(
-                "직대 파트너", 
-                min_value=1, max_value=50, 
-                key="my_partners_val", 
-                format="%d", # [수정] 오류 해결: 숫자만 표시
-                label_visibility="collapsed"
-            )
-        with sub_c2:
-            st.markdown(f"<div style='{unit_style}'>명</div>", unsafe_allow_html=True)
+        # 입력창(7) : 단위박스(3) 비율로 분할
+        sc1, sc2 = st.columns([7, 3]) 
+        with sc1:
+            my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
+        with sc2:
+            st.markdown(unit_box("명"), unsafe_allow_html=True)
 
-    # 2️⃣ 파트너당 복제
+    # [2] 파트너당 복제
     with c2:
         st.markdown(styled_label("2", "파트너당 복제"), unsafe_allow_html=True)
-        sub_c1, sub_c2 = st.columns([3, 1.2])
-        with sub_c1:
-            duplication = st.number_input(
-                "파트너당 복제", 
-                min_value=1, max_value=10, 
-                key="duplication_val", 
-                format="%d", # [수정] 오류 해결
-                label_visibility="collapsed"
-            )
-        with sub_c2:
-            st.markdown(f"<div style='{unit_style}'>명씩 소개</div>", unsafe_allow_html=True)
+        sc1, sc2 = st.columns([6, 4]) # 글자가 길어서 비율 조정
+        with sc1:
+            duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
+        with sc2:
+            st.markdown(unit_box("명씩 소개"), unsafe_allow_html=True)
 
-    # 3️⃣ 계산 깊이
+    # [3] 계산 깊이
     with c3:
         st.markdown(styled_label("3", "계산 깊이"), unsafe_allow_html=True)
-        sub_c1, sub_c2 = st.columns([3, 1.2])
-        with sub_c1:
-            generations = st.number_input(
-                "계산 깊이", 
-                min_value=1, max_value=6, 
-                key="generations_val", 
-                format="%d", # [수정] 오류 해결
-                label_visibility="collapsed"
-            )
-        with sub_c2:
-            st.markdown(f"<div style='{unit_style}'>세대(Lv)</div>", unsafe_allow_html=True)
+        sc1, sc2 = st.columns([6, 4]) # 비율 조정
+        with sc1:
+            generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
+        with sc2:
+            st.markdown(unit_box("세대(Lv)"), unsafe_allow_html=True)
         
     st.markdown("---")
     
