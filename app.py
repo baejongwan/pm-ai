@@ -34,28 +34,27 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 아이콘 및 메타데이터 설정
-st.markdown(
-    f"""
-    <head>
-        <link rel="manifest" href="{MANIFEST_URL}">
-        <link rel="apple-touch-icon" href="{ICON_URL}">
-        <link rel="shortcut icon" href="{ICON_URL}">
-    </head>
-    """,
-    unsafe_allow_html=True
-)
+# [핵심 수정] 아이콘 코드가 매번 실행되지 않도록 '한 번만' 실행하게 막습니다.
+if "icon_fixed" not in st.session_state:
+    st.markdown(
+        f"""
+        <head>
+            <link rel="manifest" href="{MANIFEST_URL}">
+            <link rel="apple-touch-icon" href="{ICON_URL}">
+            <link rel="shortcut icon" href="{ICON_URL}">
+        </head>
+        """,
+        unsafe_allow_html=True
+    )
+    st.session_state.icon_fixed = True  # "나 이제 설정 했어!" 하고 깃발 꽂기
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직 (주소창 사용 X -> 오직 내부 기억만 사용)
+# [2] 네비게이션 로직 (기억 유지)
 # --------------------------------------------------------------------------
-
-# 1. 현재 페이지 기억하기 (없으면 '홈'으로 시작)
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
-# 2. 버튼 클릭 시 실행될 함수 (콜백 함수)
-# 이 함수가 실행되면 페이지만 바꾸고 즉시 끝납니다. (새로고침 효과 방지)
+# 페이지 변경 함수 (콜백)
 def change_page(page_name):
     st.session_state.page = page_name
 
@@ -90,7 +89,6 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # CSS 스타일 (버튼 예쁘게)
     st.markdown("""
         <style>
         div[data-testid="column"] { padding: 0 !important; margin: 0 !important; }
@@ -101,10 +99,7 @@ def render_top_navigation():
             transition: all 0.3s;
         }
         div.stButton > button:hover { color: #007bff; background-color: #f8f9fa; }
-        /* 클릭된 버튼 스타일 */
-        div.stButton > button:active, div.stButton > button:focus {
-            color: #007bff; border-color: transparent;
-        }
+        div.stButton > button:focus:not(:active) { border-color: transparent; color: #555; }
         @media (max-width: 768px) { div.stButton > button { font-size: 12px; padding: 5px 0; } }
         </style>
     """, unsafe_allow_html=True)
@@ -113,22 +108,21 @@ def render_top_navigation():
     current_page = st.session_state.page
 
     for i, option in enumerate(menu_options):
-        # 현재 활성화된 메뉴인지 확인
         is_active = (current_page == option)
         btn_type = "primary" if is_active else "secondary"
         
-        # [핵심] 버튼에 on_click 기능을 달아서, 누르는 순간 change_page 함수만 딱 실행하게 함
+        # 버튼 클릭 시 change_page 함수만 조용히 실행 (새로고침 최소화)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
             type=btn_type, 
             use_container_width=True,
-            on_click=change_page,  # 클릭 시 실행할 함수
-            args=(option,)         # 함수에 전달할 이름 (예: "AI상담")
+            on_click=change_page,
+            args=(option,)
         )
 
 # --------------------------------------------------------------------------
-# [5] 팝업창 설정 (홈 화면에서만)
+# [5] 팝업창 설정
 # --------------------------------------------------------------------------
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
@@ -139,11 +133,8 @@ def show_promo_window():
     if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
-# 팝업 로직 (세션에 기록을 남겨서 중복 실행 방지)
+# 팝업 로직 (홈 화면 진입 시 1회만)
 if "home_popup_shown" not in st.session_state:
-    # 방문자 수 증가 로직이 있다면 여기서만 실행해야 함 (최초 접속 1회)
-    # (여기에 방문자수 증가 코드가 있다면 딱 한 번만 실행됩니다)
-    
     if st.session_state.page == "홈":
         show_promo_window()
         st.session_state.home_popup_shown = True
@@ -154,7 +145,6 @@ if "home_popup_shown" not in st.session_state:
 render_home_logo()      
 render_top_navigation()
 
-# 현재 페이지 확인
 target_page = st.session_state.page 
 
 # API 키 설정
