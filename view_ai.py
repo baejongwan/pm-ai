@@ -134,7 +134,7 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
                 # 화면 출력
                 st.markdown(final_response)
                 
-                # 로그 저장 및 대화 기록
+                # 로그 저장 및 대화 기록 (한국 시간 함수 적용됨 - func.py에서)
                 try: save_user_log(user_info, prompt, final_response)
                 except: pass
                 
