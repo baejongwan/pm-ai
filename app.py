@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 아이콘 및 매니페스트 (최초 1회만 실행하도록 조건문 추가)
+# 아이콘 및 메타태그 (최초 1회만 설정)
 if "head_set" not in st.session_state:
     st.markdown(
         f"""
@@ -51,9 +51,9 @@ if "head_set" not in st.session_state:
     st.session_state.head_set = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직 (URL 쿼리 파라미터 방식 복구)
+# [2] 네비게이션 로직 (HTML 방식)
 # --------------------------------------------------------------------------
-# URL에서 '?page=값'을 가져옵니다. 없으면 '홈'입니다.
+# HTML <a> 태그로 전달된 ?page=... 값을 읽어옵니다.
 query_params = st.query_params
 current_page = query_params.get("page", "홈")
 
@@ -64,10 +64,9 @@ styles.apply_custom_css()
 all_sheets = load_excel()
 
 # --------------------------------------------------------------------------
-# [4] 화면 구성 함수들 (로고 및 네비게이션)
+# [4] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
-    # 홈 화면일 때만 로고 표시
     if current_page == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
@@ -94,28 +93,28 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인] 사장님이 만족하셨던 그 HTML/CSS 코드입니다.
+    # [디자인 복구] 예전의 HTML/CSS 방식 (가로 정렬, 줄바꿈 자연스러움)
     html_nav = """
     <style>
     .nav-container {
         display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 5px;
+        flex-wrap: wrap;        /* 공간 부족시 자동 줄바꿈 */
+        justify-content: center; /* 가운데 정렬 */
+        gap: 6px;
         padding-bottom: 10px;
     }
     .nav-link {
         text-decoration: none;
         color: #555;
         background-color: white;
-        padding: 6px 12px;
-        border-radius: 20px;
+        padding: 6px 14px;
+        border-radius: 50px;    /* 알약 모양 */
         border: 1px solid #ddd;
         font-size: 14px;
         font-weight: 600;
         transition: all 0.3s;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        white-space: nowrap; /* 글자 줄바꿈 방지 */
+        white-space: nowrap;
     }
     .nav-link:hover {
         background-color: #f0f8ff;
@@ -127,7 +126,7 @@ def render_top_navigation():
         color: white;
         border-color: #007bff;
     }
-    /* 모바일 반응형 */
+    /* 모바일 반응형 글자 크기 */
     @media (max-width: 400px) {
         .nav-link { font-size: 12px; padding: 5px 10px; }
     }
@@ -137,7 +136,7 @@ def render_top_navigation():
     
     for option in menu_options:
         active_class = "active" if option == current_page else ""
-        # target="_self"는 현재 창에서 페이지를 이동합니다.
+        # target="_self"를 사용해 현재 창에서 페이지 이동 (새로고침 발생)
         html_nav += f'<a href="?page={option}" target="_self" class="nav-link {active_class}">{option}</a>'
     
     html_nav += '</div>'
@@ -156,7 +155,7 @@ if api_key:
     except Exception as e:
         pass
 
-# 팝업 로직 (세션 사용하여 1회만 표시)
+# 팝업 로직 (홈 화면일 때 1회만)
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
 @st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
@@ -176,7 +175,7 @@ render_home_logo()
 render_top_navigation()
 
 # --------------------------------------------------------------------------
-# [6] 페이지 라우팅 (페이지 연결)
+# [6] 페이지 연결
 # --------------------------------------------------------------------------
 target_page = current_page
 
