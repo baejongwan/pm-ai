@@ -89,18 +89,51 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
+    # [디자인 수정] 알약 모양(Pill Shape) CSS 적용
     st.markdown("""
         <style>
-        div[data-testid="column"] { padding: 0 !important; margin: 0 !important; }
+        /* 1. 버튼 간격 좁히기 (모바일에서 줄바꿈 최소화) */
+        div[data-testid="column"] { padding: 0 2px !important; }
+        
+        /* 2. 버튼 기본 스타일 (알약 모양) */
         div.stButton > button {
-            width: 100%; border-radius: 0px; border: none;
-            background-color: transparent; color: #555; font-weight: 600;
-            padding: 10px 0; border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            width: 100%;
+            border-radius: 30px;       /* 모서리를 둥글게 -> 알약 모양 핵심 */
+            border: 1px solid #ddd;    /* 얇은 테두리 */
+            background-color: white;   /* 배경 흰색 */
+            color: #555;               /* 글자색 회색 */
+            font-size: 14px;
+            font-weight: 600;
+            padding: 5px 0;            /* 위아래 여백 */
+            height: auto;
+            min-height: 40px;          /* 높이 통일 */
+            transition: all 0.2s;      /* 부드러운 효과 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 살짝 그림자 */
         }
-        div.stButton > button:hover { color: #007bff; background-color: #f8f9fa; }
-        div.stButton > button:focus:not(:active) { border-color: transparent; color: #555; }
-        @media (max-width: 768px) { div.stButton > button { font-size: 12px; padding: 5px 0; } }
+        
+        /* 3. 마우스 올렸을 때 */
+        div.stButton > button:hover {
+            border-color: #007bff;
+            color: #007bff;
+            background-color: #f0f8ff;
+            transform: translateY(-2px); /* 살짝 위로 떠오르는 효과 */
+        }
+
+        /* 4. 클릭했을 때 (눌리는 효과) */
+        div.stButton > button:active {
+            transform: translateY(0px);
+            box-shadow: none;
+        }
+
+        /* 5. 모바일 화면 대응 (글자 크기 자동 조절) */
+        @media (max-width: 768px) {
+            div.stButton > button { 
+                font-size: 11px; 
+                padding: 2px 0; 
+                border-radius: 15px; /* 모바일은 조금 덜 둥글게 */
+                min-height: 35px;
+            }
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -108,10 +141,13 @@ def render_top_navigation():
     current_page = st.session_state.page
 
     for i, option in enumerate(menu_options):
+        # 현재 선택된 메뉴인지 확인
         is_active = (current_page == option)
+        
+        # 선택된 버튼은 'primary' (색상 강조), 나머지는 'secondary' (흰색)
         btn_type = "primary" if is_active else "secondary"
         
-        # 버튼 클릭 시 change_page 함수만 조용히 실행 (새로고침 최소화)
+        # 버튼 그리기 (기능은 그대로 유지!)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
@@ -163,3 +199,4 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
