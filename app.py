@@ -125,7 +125,7 @@ def render_top_navigation():
 # [5] 팝업창 설정
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-selected_model = "gemini-1.5-flash" #gemini-1.5-flash,gemini-flash-latest,gemini-pro
+selected_model = "gemini-2.0-flash" #gemini-1.5-flash,gemini-flash-latest,gemini-pro
 
 if api_key:
     try:
@@ -200,6 +200,7 @@ try:
             st.write(f"- {m.name}")
 except Exception as e:
     st.error(f"목록 불러오기 실패: {e}")
+
 
 
 
