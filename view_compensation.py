@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 오류 해결 + 분리형 디자인 적용)
+# 2. 수익 시뮬레이션 (수정 완료: 텍스트 위치 미세 조정 + 굵기 강화)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,73 +43,40 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 오류 원인(format) 제거하고 '단위 박스'를 옆에 붙이는 디자인
+    # [수정된 부분] 
+    # 1. 텍스트 정렬 보정: 오른쪽 버튼 너비만큼 padding-right를 줘서 왼쪽으로 이동
+    # 2. 글자 굵기: font-weight: 900 (아주 굵게) 적용
     # ----------------------------------------------------------------------
     
+    # 스타일 정의 (오른쪽 버튼 크기 약 2.5rem 만큼 여백을 주어 시각적 중앙 맞춤)
+    label_style = "text-align: center; font-weight: 900; font-size: 1.1em; margin-bottom:5px; padding-right: 2.5rem;"
+    unit_style = "text-align: center; font-weight: bold; font-size: 0.9em; color:#333; padding-right: 2.5rem;"
+
     # 1. 세션 상태 초기화
     if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
     if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
     if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
 
-    # 2. 파란색 라벨 스타일 (사진과 동일)
-    def styled_label(num, text):
-        return f"""
-        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
-            <span style="background-color: #007bff; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-right: 6px; font-size: 1.0em;">{num}</span>
-            <span style="font-weight: 900; font-size: 1.1em; color: #333;">{text}</span>
-        </div>
-        """
-
-    # 3. 단위 박스 스타일 (숫자칸 옆에 붙을 회색 테두리 박스)
-    def unit_box(text):
-        return f"""
-        <div style="
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 42px; 
-            border: 1px solid #d6d6d6; 
-            border-radius: 4px; 
-            background-color: #f9f9f9; 
-            font-weight: bold; 
-            color: #555; 
-            font-size: 0.9em;
-            margin-top: 0px;
-        ">
-            {text}
-        </div>
-        """
-
-    # 4. 입력창 배치 (3단 컬럼)
+    # 2. 3단 컬럼 레이아웃
     c1, c2, c3 = st.columns(3)
     
-    # [1] 직대 파트너
+    # 1️⃣ 직대 파트너
     with c1:
-        st.markdown(styled_label("1", "직대 파트너"), unsafe_allow_html=True)
-        # 입력창(7) : 단위박스(3) 비율로 분할
-        sc1, sc2 = st.columns([7, 3]) 
-        with sc1:
-            my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
-        with sc2:
-            st.markdown(unit_box("명"), unsafe_allow_html=True)
+        st.markdown(f"<div style='{label_style}'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
+        my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
+        st.markdown(f"<div style='{unit_style}'>명</div>", unsafe_allow_html=True)
 
-    # [2] 파트너당 복제
+    # 2️⃣ 파트너당 복제
     with c2:
-        st.markdown(styled_label("2", "파트너당 복제"), unsafe_allow_html=True)
-        sc1, sc2 = st.columns([6, 4]) # 글자가 길어서 비율 조정
-        with sc1:
-            duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
-        with sc2:
-            st.markdown(unit_box("명씩 소개"), unsafe_allow_html=True)
+        st.markdown(f"<div style='{label_style}'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
+        duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
+        st.markdown(f"<div style='{unit_style}'>명씩 소개</div>", unsafe_allow_html=True)
 
-    # [3] 계산 깊이
+    # 3️⃣ 계산 깊이
     with c3:
-        st.markdown(styled_label("3", "계산 깊이"), unsafe_allow_html=True)
-        sc1, sc2 = st.columns([6, 4]) # 비율 조정
-        with sc1:
-            generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
-        with sc2:
-            st.markdown(unit_box("세대(Lv)"), unsafe_allow_html=True)
+        st.markdown(f"<div style='{label_style}'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
+        generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
+        st.markdown(f"<div style='{unit_style}'>세대(Level)</div>", unsafe_allow_html=True)
         
     st.markdown("---")
     
