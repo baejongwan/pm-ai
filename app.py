@@ -15,8 +15,8 @@ import view_compensation
 import view_stories
 from utils import load_excel
 
-# [오류 해결] 여기서 두 줄이 붙어있던 것을 떼어냈습니다.
-from config import warnings.filterwarnings("ignore")
+# [진짜 수정 완료] 이제 두 줄로 확실히 나눴습니다.
+from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -124,7 +124,7 @@ def render_top_navigation():
 # [5] 팝업창 및 AI 설정
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-selected_model = "gemini-2.5-flash" # [확인] 사장님 전용 최신 모델
+selected_model = "gemini-2.5-flash" # [확인] 최신 모델 적용됨
 
 if api_key:
     try:
@@ -171,4 +171,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
