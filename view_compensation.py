@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 텍스트 위치 미세 조정 + 굵기 강화)
+# 2. 수익 시뮬레이션 (수정 완료: 텍스트 위치 정교화 + 밀착 배치)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,14 +43,34 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 
-    # 1. 텍스트 정렬 보정: 오른쪽 버튼 너비만큼 padding-right를 줘서 왼쪽으로 이동
-    # 2. 글자 굵기: font-weight: 900 (아주 굵게) 적용
+    # [디자인 수정 포인트] 
+    # 1. padding-right: 3rem -> +/- 버튼 너비만큼 글자를 왼쪽으로 밀어서 '흰 박스 중앙'에 맞춤
+    # 2. margin-bottom/top: -15px -> 글자와 입력창 사이의 붕 뜬 공간을 제거하여 '착 붙게' 함
     # ----------------------------------------------------------------------
     
-    # 스타일 정의 (오른쪽 버튼 크기 약 2.5rem 만큼 여백을 주어 시각적 중앙 맞춤)
-    label_style = "text-align: center; font-weight: 900; font-size: 1.1em; margin-bottom:5px; padding-right: 2.5rem;"
-    unit_style = "text-align: center; font-weight: bold; font-size: 0.9em; color:#333; padding-right: 2.5rem;"
+    # 라벨 스타일 (제목)
+    label_style = """
+        text-align: center; 
+        font-weight: 900; 
+        font-size: 1.1em; 
+        color: #000;
+        padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
+        margin-bottom: -15px;  /* 입력창과 틈새 줄이기 */
+        position: relative; 
+        z-index: 1;
+    """
+    
+    # 단위 스타일 (아래 글자)
+    unit_style = """
+        text-align: center; 
+        font-weight: 800; 
+        font-size: 0.95em; 
+        color: #444; 
+        padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
+        margin-top: -15px;     /* 입력창과 틈새 줄이기 */
+        position: relative;
+        z-index: 1;
+    """
 
     # 1. 세션 상태 초기화
     if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
