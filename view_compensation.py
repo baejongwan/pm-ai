@@ -1,6 +1,6 @@
 import streamlit as st
 from utils import get_optimized_image
-from components import apply_custom_styles, number_counter
+from components import apply_custom_styles
 
 # 1. 보상플랜 핵심요약 (기존 유지)
 def render_compensation(all_sheets):
@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정됨: 140GV 기준)
+# 2. 수익 시뮬레이션 (수정 완료: 오류 해결 + 140GV 로직 유지)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -42,14 +42,29 @@ def render_calculator_v2():
         """)
     st.markdown("---")
     
+    # ----------------------------------------------------------------------
+    # [수정된 부분] 위젯 초기화 로직 변경 (오류 원인 제거)
+    # number_counter 대신 st.number_input을 직접 사용하여 충돌 방지
+    # ----------------------------------------------------------------------
+    
+    # 1. 세션 상태에 값이 없으면 초기값 설정
+    if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
+    if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
+    if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
+
+    # 2. 위젯 생성 (value 옵션을 제거하고 key로만 제어)
     c1, c2, c3 = st.columns(3)
-    with c1: my_partners = number_counter("1️⃣ 직대 파트너", "my_partners_val", 3, 1, 50, "명")
-    with c2: duplication = number_counter("2️⃣ 파트너당 복제", "duplication_val", 3, 1, 10, "명씩 소개")
-    with c3: generations = number_counter("3️⃣ 계산 깊이", "generations_val", 4, 1, 6, "세대(Level)")
+    with c1: 
+        my_partners = st.number_input("1️⃣ 직대 파트너 (명)", min_value=1, max_value=50, key="my_partners_val")
+    with c2: 
+        duplication = st.number_input("2️⃣ 파트너당 복제 (명)", min_value=1, max_value=10, key="duplication_val")
+    with c3: 
+        generations = st.number_input("3️⃣ 계산 깊이 (세대)", min_value=1, max_value=6, key="generations_val")
+        
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 가격 및 GV 설정 (오토십 + 액티바이즈)
+    # [기존 유지] 가격 및 GV 설정 (오토십 + 액티바이즈)
     # ----------------------------------------------------------------------
     # 가격 기준: 오토십(약 137,100원) + 액티바이즈(약 42,600원) = 179,700원
     # 포인트 기준: 오토십(103GV) + 액티바이즈(37GV) = 140GV
