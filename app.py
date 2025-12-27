@@ -16,7 +16,8 @@ import view_stories
 from utils import load_excel
 
 # [진짜 수정 완료] 이제 두 줄로 확실히 나눴습니다.
-from config import * warnings.filterwarnings("ignore")
+from config 
+import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -171,4 +172,5 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
