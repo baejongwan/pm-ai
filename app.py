@@ -24,12 +24,9 @@ from config import *
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 설정 (Manifest 방식 적용)
 # --------------------------------------------------------------------------
-
-# 1. 아이콘 및 매니페스트 주소
 ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
 
-# 2. 페이지 기본 설정
 st.set_page_config(
     page_title="PM 파트너스 허브", 
     page_icon=ICON_URL, 
@@ -37,8 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 3. [최종 병기] 아이콘 및 매니페스트 강제 주입
-# (수정사항: 매번 실행되어 깜빡이는 것을 방지하기 위해 한 번만 실행되도록 설정)
+# [핵심] 아이콘 깜빡임/새로고침 방지 (최초 1회만 실행)
 if "icon_fixed" not in st.session_state:
     st.markdown(
         f"""
@@ -55,13 +51,12 @@ if "icon_fixed" not in st.session_state:
     st.session_state.icon_fixed = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직 (수정사항: URL 방식 제거 -> 내부 기억 장치 사용)
+# [2] 네비게이션 로직 (내부 기억 장치 사용)
 # --------------------------------------------------------------------------
-# URL(?page=...)을 쓰면 새로고침이 되므로, session_state로 페이지를 기억합니다.
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
-# 페이지 변경 함수 (새로고침 없이 화면만 바꿈)
+# 페이지 변경 함수
 def change_page(page_name):
     st.session_state.page = page_name
 
@@ -75,8 +70,7 @@ all_sheets = load_excel()
 # [4] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
-    # 로고는 현재 페이지가 '홈'일 때만 나오거나, 항상 나오거나 설정 가능
-    # (기존 로직 유지하되 session_state 기준)
+    # 홈 화면일 때만 로고 표시 (선택 사항)
     if st.session_state.page == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
@@ -103,65 +97,77 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인 수정] 버튼을 기존 메뉴바처럼 보이게 하는 CSS
-    # 알약 모양이나 세로 리스트가 되지 않도록, 최대한 깔끔한 가로형 버튼으로 스타일링
+    # [디자인 해결] 세로 정렬 방지 + 알약 모양 CSS
     st.markdown("""
         <style>
-        /* 버튼 간격 조절 */
-        div[data-testid="column"] { padding: 0 !important; margin: 0 !important; min-width: 0px !important;}
+        /* 1. 기둥(Column) 강제 가로 정렬 */
+        div[data-testid="column"] {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-width: 0px !important; /* 이게 없으면 좁은 화면에서 세로로 바뀜 */
+        }
         
-        /* 버튼 스타일 평면화 (링크처럼 보이게) */
+        /* 2. 버튼 스타일 (알약 모양) */
         div.stButton > button {
             width: 100%;
-            border: none;
-            border-radius: 0px;
-            background-color: transparent;
+            border-radius: 50px;       /* 둥근 알약 모양 */
+            border: 1px solid #eee;
+            background-color: white;
             color: #555;
-            font-size: 14px;
+            font-size: 13px;           /* 글자 크기 조정 */
             font-weight: 600;
-            padding: 10px 0;
-            margin: 0;
-            border-bottom: 3px solid transparent;
+            padding: 6px 0;
+            margin: 2px 0;
+            white-space: nowrap;       /* 글자 줄바꿈 방지 */
             transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        /* 마우스 올렸을 때 */
+        /* 3. 마우스 올렸을 때 */
         div.stButton > button:hover {
+            background-color: #f0f8ff;
             color: #007bff;
-            background-color: #f8f9fa;
+            border-color: #007bff;
+            transform: translateY(-1px);
+        }
+        
+        /* 4. 클릭 효과 */
+        div.stButton > button:active {
+            transform: translateY(0);
         }
 
-        /* 모바일 화면 대응 (글자 크기 자동 조절) */
+        /* 5. 모바일 화면 미세 조정 */
         @media (max-width: 768px) {
             div.stButton > button { 
-                font-size: 11px; 
-                padding: 5px 0; 
+                font-size: 10px; 
+                padding: 4px 0; 
             }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 메뉴 개수만큼 컬럼 생성 (가로 배열 유지)
-    cols = st.columns(len(menu_options))
+    # 11개 메뉴를 위한 좁은 간격의 기둥 생성
+    cols = st.columns(len(menu_options), gap="small")
     current_page = st.session_state.page
 
     for i, option in enumerate(menu_options):
-        # 현재 선택된 메뉴인지 확인
         is_active = (current_page == option)
+        
+        # 활성화된 버튼 시각적 강조 (Primary)
         btn_type = "primary" if is_active else "secondary"
         
-        # [핵심] a 태그(링크) 대신 button(버튼) 사용 -> 새로고침 방지!
+        # [기능 해결] button + on_click 사용 (새로고침 방지)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
             type=btn_type, 
             use_container_width=True,
-            on_click=change_page, # 클릭 시 페이지 변경 함수 실행
+            on_click=change_page, 
             args=(option,)
         )
 
 # --------------------------------------------------------------------------
-# [5] 실행 (서버 목록에 있는 확실한 모델 이름 사용)
+# [5] 실행 설정
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
 selected_model = "gemini-flash-latest"
@@ -176,7 +182,7 @@ if api_key:
 # [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-# [2] 정식 팝업창 기능 (st.dialog 사용)
+# [2] 정식 팝업창 기능
 @st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
@@ -184,20 +190,19 @@ def show_promo_window():
     if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
-# [3] 팝업 실행 로직 (접속 시 한 번만 뜨도록 설정)
+# [3] 팝업 실행 로직 (접속 시 한 번만)
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
         st.session_state["home_popup_shown"] = True
 
-# [4] 나머지 화면 렌더링
+# [4] 화면 렌더링
 render_home_logo()      
 render_top_navigation()
 
 # --------------------------------------------------------------------------
-# [6] 페이지 내용 표시
+# [6] 페이지 내용 표시 (기억된 페이지 보여주기)
 # --------------------------------------------------------------------------
-# URL 파라미터가 아닌 session_state의 페이지를 바라봅니다.
 target_page = st.session_state.page
 
 if target_page == "홈": view_home.render_home_dashboard(all_sheets)
