@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정됨: 디자인 유지 + 오류 해결)
+# 2. 수익 시뮬레이션 (수정 완료: 디자인 적용 + 오류 해결)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,35 +43,34 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 오류 해결을 위한 세션 초기화 및 디자인 적용
+    # [수정된 부분] 오류 해결 및 모바일 최적화 디자인 (중앙 정렬)
     # ----------------------------------------------------------------------
     
-    # 1. 세션 상태 초기화 (값이 없을 때만 초기값 3, 3, 4 설정 -> 오류 원인 차단)
+    # 1. 세션 상태 초기화 (값이 없을 때만 초기값 설정 -> 오류 원인 차단)
     if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
     if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
     if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
 
-    # 2. 3단 컬럼 레이아웃 (모바일 최적화 디자인 유지)
+    # 2. 3단 컬럼 레이아웃 구성
     c1, c2, c3 = st.columns(3)
     
-    # 1️⃣ 직대 파트너 (위: 라벨, 중간: 입력창, 아래: 단위)
+    # 1️⃣ 직대 파트너 (제목 중앙 - 입력창 - 단위 중앙)
     with c1:
-        st.markdown("<div style='text-align: center; font-weight: bold;'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
-        # value 옵션을 제거하여 충돌 방지
+        st.markdown("<div style='text-align: center; font-weight: bold; margin-bottom:5px;'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
         my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
-        st.markdown("<div style='text-align: center; font-size: 0.9em;'>명</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 0.9em; color:#555;'>명</div>", unsafe_allow_html=True)
 
     # 2️⃣ 파트너당 복제
     with c2:
-        st.markdown("<div style='text-align: center; font-weight: bold;'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-weight: bold; margin-bottom:5px;'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
         duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
-        st.markdown("<div style='text-align: center; font-size: 0.9em;'>명씩 소개</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 0.9em; color:#555;'>명씩 소개</div>", unsafe_allow_html=True)
 
     # 3️⃣ 계산 깊이
     with c3:
-        st.markdown("<div style='text-align: center; font-weight: bold;'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-weight: bold; margin-bottom:5px;'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
         generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
-        st.markdown("<div style='text-align: center; font-size: 0.9em;'>세대(Level)</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 0.9em; color:#555;'>세대(Level)</div>", unsafe_allow_html=True)
         
     st.markdown("---")
     
