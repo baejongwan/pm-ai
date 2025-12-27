@@ -87,68 +87,104 @@ def render_home_logo():
                     PM Partners
                 </h3>
             """, unsafe_allow_html=True)
+
 def render_top_navigation():
     menu_options = [
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
-
-    # CSS로 라디오를 '가로형 알약 버튼 + 자동 줄바꿈 + 가운데 정렬'로 변환
+    
+    # [★ 사장님 아이디어 적용: 글자 크기에 딱 맞추기 (fit-content) ★]
     st.markdown("""
         <style>
-        /* 전체 라디오 그룹을 플렉스 컨테이너로 */
-        div[data-testid="stRadio"] div[role="radiogroup"] {
+        /* 1. 메뉴바 전체 틀: "줄바꿈(wrap)"을 가장 강력하게 적용 */
+        div[data-testid="stHorizontalBlock"] {
             display: flex !important;
-            flex-wrap: wrap !important;         /* 공간 부족하면 줄바꿈 */
+            flex-wrap: wrap !important;        /* 공간 없으면 무조건 다음 줄로! */
             justify-content: center !important; /* 가운데 정렬 */
-            gap: 8px !important;                /* 버튼 간격 */
+            gap: 6px !important;               /* 버튼 사이 간격 */
+            padding-bottom: 10px !important;
+            width: 100% !important;
         }
-        /* 각 옵션을 pill 버튼처럼 */
-        div[data-testid="stRadio"] label {
-            display: inline-flex !important;
-            align-items: center !important;
+
+        /* 2. 버튼이 들어가는 '방(Column)': 글자 크기에 딱 맞춰라! */
+        div[data-testid="column"] {
+            flex: 0 0 auto !important;          /* 늘어나지 마! (0) */
+            width: auto !important;             /* 100% 차지하지 마! */
+            min-width: fit-content !important;  /* ★핵심: 글자 내용물 크기에 딱 맞춰라! */
+            max-width: fit-content !important;  /* 너도나도 글자 크기만큼만! */
+        }
+
+        /* 3. 모바일 화면에서 Streamlit이 강제로 100% 늘리는 것 차단 */
+        @media (max-width: 640px) {
+            div[data-testid="column"] {
+                width: auto !important;
+                min-width: fit-content !important;
+                flex: 0 0 auto !important;
+            }
+            /* 모바일에서도 가로 배치 유지 */
+            div[data-testid="stHorizontalBlock"] {
+                flex-direction: row !important;
+                display: flex !important;
+                flex-wrap: wrap !important;
+            }
+        }
+
+        /* 4. 버튼 디자인 (알약 모양) */
+        div.stButton > button {
+            width: auto !important;             /* 버튼 너비도 글자에 맞춤 */
+            height: auto !important;
             padding: 6px 14px !important;
             border-radius: 50px !important;
-            border: 1px solid #ddd !important;
-            background-color: #fff !important;
-            color: #555 !important;
+            border: 1px solid #e0e0e0;
+            background-color: white;
+            color: #555;
             font-size: 14px !important;
-            font-weight: 600 !important;
-            white-space: nowrap !important;
-            cursor: pointer !important;
+            font-weight: 600;
+            margin: 0 !important;
+            white-space: nowrap !important;     /* ★절대 두 줄로 깨지지 않게 함★ */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        /* 선택된 옵션 강조 */
-        div[data-testid="stRadio"] input:checked + div {
-            border-color: #007bff !important;
-            color: #007bff !important;
-            background-color: #e7f1ff !important;
+
+        /* 마우스 호버 */
+        div.stButton > button:hover {
+            border-color: #007bff;
+            color: #007bff;
+            background-color: #f0f8ff;
         }
-        /* 호버 효과 */
-        div[data-testid="stRadio"] label:hover {
-            border-color: #007bff !important;
-            color: #007bff !important;
-            background-color: #f0f8ff !important;
+
+        /* 클릭 시 */
+        div.stButton > button:focus:not(:active) {
+            border-color: #007bff;
+            color: #007bff;
+            background-color: #e7f1ff;
         }
-        /* 기본 라디오 점 숨김 */
-        div[data-testid="stRadio"] input {
-            display: none !important;
+        
+        /* 5. 아주 작은 폰트 대응 */
+        @media (max-width: 400px) {
+            div.stButton > button {
+                padding: 4px 10px !important;
+                font-size: 13px !important;
+            }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 라디오로 현재 페이지 선택
-    current = st.radio(
-        label="메뉴", 
-        options=menu_options,
-        index=menu_options.index(st.session_state.page),
-        horizontal=False,  # CSS가 가로/랩핑을 처리하므로 False 유지
-        key="nav_radio"
-    )
+    # 컬럼 생성 및 버튼 배치
+    cols = st.columns(len(menu_options))
+    current_page = st.session_state.page
 
-    # 세션 상태만 변경 (리로드 없이 상태 유지)
-    if current != st.session_state.page:
-        change_page(current)
-
+    for i, option in enumerate(menu_options):
+        is_active = (current_page == option)
+        btn_type = "primary" if is_active else "secondary"
+        
+        cols[i].button(
+            option, 
+            key=f"nav_{i}", 
+            type=btn_type, 
+            on_click=change_page, 
+            args=(option,)
+        )
 
 # --------------------------------------------------------------------------
 # [5] 실행 설정
@@ -200,4 +236,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
