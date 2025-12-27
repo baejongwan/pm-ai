@@ -2,31 +2,32 @@ import streamlit as st
 from utils import get_optimized_image
 from components import apply_custom_styles
 
-# [핵심] 충돌을 방지하는 안전한 카운터 함수 (새로 추가됨)
+# [핵심] 기존 디자인을 유지하면서 '오류만 제거한' 안전한 카운터 함수 생성
 def safe_counter_ui(label, key, default_val, min_v, max_v, unit_text):
-    # 1. 메모리에 값이 없을 때만 초기값 입력 (충돌 방지)
+    # 1. 세션 상태에 값이 없을 때만 초기값 설정 (오류 원인 차단)
     if key not in st.session_state:
         st.session_state[key] = default_val
 
-    # 2. 디자인 구현 (라벨 진하게 + 입력창 + 단위)
-    st.markdown(f"**{label}**") 
+    # 2. 디자인 구현 (라벨과 입력창을 깔끔하게 배치)
+    st.markdown(f"**{label}**") # 라벨을 진하게 표시
     
+    # 입력창과 단위 텍스트 배치
     c_input, c_unit = st.columns([2, 1])
     with c_input:
-        # value=... 옵션을 제거해서 메모리 값과 싸우지 않게 함
+        # value=... 옵션을 빼고 key로만 제어하여 충돌 방지
         val = st.number_input(
             label=label,
             min_value=min_v,
             max_value=max_v,
             key=key,
-            label_visibility="collapsed"
+            label_visibility="collapsed" # 입력창 위 중복 라벨 숨김
         )
     with c_unit:
         st.markdown(f"<div style='padding-top: 10px;'>{unit_text}</div>", unsafe_allow_html=True)
     
     return val
 
-# 1. 보상플랜 핵심요약 (기존 유지)
+# 1. 보상플랜 핵심요약 (기존 코드 유지)
 def render_compensation(all_sheets):
     apply_custom_styles()
     st.markdown("## 📚 보상플랜 핵심요약")
@@ -52,7 +53,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 충돌 해결 + 디자인 유지)
+# 2. 수익 시뮬레이션 (수정 완료: 디자인 복구 + 오류 해결)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -66,9 +67,12 @@ def render_calculator_v2():
         """)
     st.markdown("---")
     
+    # ----------------------------------------------------------------------
+    # [수정된 부분] 새로 만든 safe_counter_ui 함수 사용
+    # 기존 number_counter와 똑같은 디자인을 내면서 오류는 안 나도록 처리
+    # ----------------------------------------------------------------------
     c1, c2, c3 = st.columns(3)
     
-    # [수정됨] number_counter 대신 safe_counter_ui 사용
     with c1: 
         my_partners = safe_counter_ui("1️⃣ 직대 파트너", "my_partners_val", 3, 1, 50, "명")
     with c2: 
@@ -86,7 +90,7 @@ def render_calculator_v2():
     
     level_rates = [0.05, 0.03, 0.03, 0.03, 0.05, 0.05] # 레벨별 지급률
     
-    # 1. 직추천 보너스
+    # 1. 직추천 보너스 (내가 직접 소개한 파트너 매출의 10%)
     direct_income = (my_partners * UNIT_PRICE) * 0.10
     
     level_income = 0
@@ -95,17 +99,21 @@ def render_calculator_v2():
     partners_on_level = my_partners
     details_text = []
 
-    # 2. 레벨 보너스 계산
+    # 2. 레벨 보너스 계산 (복제)
     for i in range(generations):
+        # 파트너 수 계산
         current_partners = my_partners if i == 0 else partners_on_level * duplication
         partners_on_level = current_partners
         
+        # 매출 및 GV 계산
         current_sales = current_partners * UNIT_PRICE
         current_gv = current_partners * UNIT_GV
         
+        # 보너스 계산
         rate = level_rates[i] if i < len(level_rates) else 0.02
         current_bonus = current_sales * rate
         
+        # 누적
         total_partners += current_partners
         total_gv += current_gv
         level_income += current_bonus
@@ -114,7 +122,7 @@ def render_calculator_v2():
 
     total_income = direct_income + level_income
     
-    # 3. 직급 및 보너스 산정
+    # 3. 직급 및 추가 보너스 산정
     rank, car_bonus, travel, badge_color = "매니저", 0, "없음", "gray"
     
     if total_gv >= 100000: rank, car_bonus, travel, badge_color = "PT", 650000, "✈️ 월드 투어 풀패키지", "#FFD700"
