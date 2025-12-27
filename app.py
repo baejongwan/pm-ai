@@ -22,7 +22,7 @@ except: genai = None
 from config import *
 
 # --------------------------------------------------------------------------
-# [1] 기본 페이지 설정 (Manifest 방식 적용)
+# [1] 기본 페이지 설정 (Manifest 및 아이콘 깜빡임 방지)
 # --------------------------------------------------------------------------
 ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# [핵심] 아이콘 깜빡임/새로고침 방지 (최초 1회만 실행)
+# [핵심] 아이콘 코드가 매번 실행되어 새로고침 유발하는 것을 방지 (최초 1회만 실행)
 if "icon_fixed" not in st.session_state:
     st.markdown(
         f"""
@@ -51,12 +51,13 @@ if "icon_fixed" not in st.session_state:
     st.session_state.icon_fixed = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직 (내부 기억 장치 사용)
+# [2] 네비게이션 로직 (URL 대신 내부 기억 장치 사용)
 # --------------------------------------------------------------------------
+# URL(?page=...) 방식은 새로고침을 유발하므로 제거하고 session_state만 씁니다.
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
-# 페이지 변경 함수
+# 페이지 변경 함수 (새로고침 없이 화면만 전환)
 def change_page(page_name):
     st.session_state.page = page_name
 
@@ -70,7 +71,7 @@ all_sheets = load_excel()
 # [4] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
-    # 홈 화면일 때만 로고 표시 (선택 사항)
+    # 홈 화면일 때만 로고 표시
     if st.session_state.page == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
@@ -97,71 +98,68 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인 해결] 세로 정렬 방지 + 알약 모양 CSS
+    # [디자인 해결의 핵심] CSS로 강제 가로 정렬 & 줄바꿈 허용
     st.markdown("""
         <style>
-        /* 1. 기둥(Column) 강제 가로 정렬 */
-        div[data-testid="column"] {
-            padding: 0 !important;
-            margin: 0 !important;
-            min-width: 0px !important; /* 이게 없으면 좁은 화면에서 세로로 바뀜 */
+        /* 1. 버튼들을 감싸는 컨테이너가 좁아져도 줄바꿈(wrap) 되도록 설정 */
+        div[data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            padding-bottom: 10px;
+            justify-content: center; /* 버튼들 가운데 정렬 */
         }
         
-        /* 2. 버튼 스타일 (알약 모양) */
+        /* 2. 기둥(Column)의 너비를 내용물만큼만 차지하게 강제 설정 */
+        /* 이게 없으면 모바일에서 100% 폭을 차지해서 세로로 쌓임 */
+        div[data-testid="column"] {
+            width: auto !important;
+            flex: 0 1 auto !important;
+            min-width: fit-content !important;
+        }
+        
+        /* 3. 버튼 스타일 (작고 예쁜 알약 모양) */
         div.stButton > button {
-            width: 100%;
-            border-radius: 50px;       /* 둥근 알약 모양 */
-            border: 1px solid #eee;
+            width: auto !important;    /* 글자 크기만큼만 너비 차지 */
+            height: auto !important;
+            padding: 5px 12px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            border-radius: 20px !important; /* 둥근 알약 */
+            border: 1px solid #e0e0e0;
             background-color: white;
             color: #555;
-            font-size: 13px;           /* 글자 크기 조정 */
-            font-weight: 600;
-            padding: 6px 0;
-            margin: 2px 0;
-            white-space: nowrap;       /* 글자 줄바꿈 방지 */
-            transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        /* 3. 마우스 올렸을 때 */
-        div.stButton > button:hover {
-            background-color: #f0f8ff;
-            color: #007bff;
-            border-color: #007bff;
-            transform: translateY(-1px);
-        }
-        
-        /* 4. 클릭 효과 */
-        div.stButton > button:active {
-            transform: translateY(0);
+            margin: 0 !important;
         }
 
-        /* 5. 모바일 화면 미세 조정 */
-        @media (max-width: 768px) {
-            div.stButton > button { 
-                font-size: 10px; 
-                padding: 4px 0; 
-            }
+        /* 4. 마우스 올렸을 때 */
+        div.stButton > button:hover {
+            border-color: #007bff;
+            color: #007bff;
+            background-color: #f0f8ff;
+        }
+        
+        /* 5. 선택된 버튼 강조 (Primary) */
+        div.stButton > button:focus:not(:active) {
+            border-color: #007bff;
+            color: #007bff;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 11개 메뉴를 위한 좁은 간격의 기둥 생성
-    cols = st.columns(len(menu_options), gap="small")
+    # 버튼들을 화면에 배치
+    cols = st.columns(len(menu_options))
     current_page = st.session_state.page
 
     for i, option in enumerate(menu_options):
+        # 현재 선택된 페이지인지 확인
         is_active = (current_page == option)
-        
-        # 활성화된 버튼 시각적 강조 (Primary)
         btn_type = "primary" if is_active else "secondary"
         
-        # [기능 해결] button + on_click 사용 (새로고침 방지)
+        # [기능 유지] st.button + on_click 사용 (새로고침 절대 안 됨!)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
             type=btn_type, 
-            use_container_width=True,
             on_click=change_page, 
             args=(option,)
         )
@@ -190,7 +188,7 @@ def show_promo_window():
     if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
-# [3] 팝업 실행 로직 (접속 시 한 번만)
+# [3] 팝업 실행 로직 (홈 화면 진입 시 1회만)
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
