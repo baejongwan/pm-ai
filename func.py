@@ -4,7 +4,14 @@ import datetime
 import os
 import base64
 import gspread
+import pytz # [추가] 한국 시간 처리를 위해 필요
 from oauth2client.service_account import ServiceAccountCredentials
+
+# [0] 한국 시간 구하는 헬퍼 함수
+def get_korea_time():
+    utc_now = datetime.datetime.now(pytz.utc)
+    korea_timezone = pytz.timezone('Asia/Seoul')
+    return utc_now.astimezone(korea_timezone)
 
 # [1] 배경 이미지 설정 (기존 유지)
 def set_background(image_file):
@@ -48,31 +55,28 @@ def get_sheet_data(all_sheets, keyword):
         
     return None
 
-# [3] 방문자 수 카운트 (구글 시트 연동 버전)
+# [3] 방문자 수 카운트 (한국 시간 기준 + 구글 시트 연동)
 def get_daily_visitor_count():
-    import datetime
     from func import get_google_sheet_connection # 연결 함수 재사용
     
-    today_str = datetime.date.today().strftime("%Y-%m-%d")
+    # [수정] 한국 시간 기준으로 오늘 날짜 가져오기
+    now_kor = get_korea_time()
+    today_str = now_kor.strftime("%Y-%m-%d")
     
-    # 세션 상태 확인 (새로고침 시 카운트 증가 방지)
+    # 세션 상태 확인 (새로고침 시 카운트 증가 방지용 1차 방어)
     if "visited" not in st.session_state:
         st.session_state.visited = True
         
         try:
             client = get_google_sheet_connection()
             if client:
-                # 1. '방문자수' 시트 열기 (없으면 생성해야 함)
+                # 1. '방문자수' 시트 열기
                 try:
                     sheet = client.open("PM_AI_상담이력").worksheet("방문자수")
                 except:
-                    # 시트가 없으면 기본 시트(sheet1)를 쓰거나 에러 처리
-                    # 여기서는 편의상 상담이력 시트의 맨 마지막 셀을 쓴다고 가정하거나
-                    # 가장 좋은 건 구글 시트에 '방문자수' 탭을 하나 추가하는 것입니다.
                     return 1
 
                 # 2. 오늘 날짜 데이터 찾기
-                # A열: 날짜, B열: 카운트 라고 가정
                 cell = sheet.find(today_str)
                 
                 if cell:
@@ -86,7 +90,7 @@ def get_daily_visitor_count():
                     sheet.append_row([today_str, 1])
                     return 1
             else:
-                return 1 # 연결 실패 시 1명으로 표시
+                return 1 # 연결 실패 시
         except Exception as e:
             print(f"방문자 카운트 오류: {e}")
             return 1
@@ -110,7 +114,7 @@ def move_to_page(page_name):
     st.query_params["page"] = page_name
     st.rerun()
 
-# [5] 구글 시트 연결 헬퍼 함수 (신규 추가)
+# [5] 구글 시트 연결 헬퍼 함수
 def get_google_sheet_connection():
     try:
         # Streamlit Secrets에서 키 정보 가져오기
@@ -123,9 +127,12 @@ def get_google_sheet_connection():
         print(f"구글 시트 연결 실패: {e}")
         return None
 
-# [6] ★ 사용자 로그 저장 (구글 시트로 변경됨) ★
+# [6] ★ 사용자 로그 저장 (한국 시간 적용) ★
 def save_user_log(user_info, question, answer):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # [수정] 한국 시간 적용
+    now_kor = get_korea_time()
+    timestamp = now_kor.strftime("%Y-%m-%d %H:%M:%S")
+    
     age = str(user_info.get("age", "-"))
     gender = user_info.get("gender", "-")
     conditions = ", ".join(user_info.get("conditions", []))
@@ -137,11 +144,10 @@ def save_user_log(user_info, question, answer):
         # 1. 구글 시트 연결
         client = get_google_sheet_connection()
         if client:
-            # 2. 스프레드시트 열기 (이름: PM_AI_상담이력)
-            # 주의: 구글 드라이브에 이 이름의 시트가 있어야 하고, 봇에게 공유되어 있어야 함
+            # 2. 스프레드시트 열기
             sheet = client.open("PM_AI_상담이력").sheet1
             
-            # 3. 데이터 추가 (append_row)
+            # 3. 데이터 추가
             sheet.append_row(row_data)
             print("✅ 구글 시트 저장 성공")
         else:
@@ -155,4 +161,3 @@ def save_user_log(user_info, question, answer):
         with open(file_name, mode='a', newline='', encoding='utf-8-sig') as file:
             writer = csv.writer(file)
             writer.writerow(row_data)
-
