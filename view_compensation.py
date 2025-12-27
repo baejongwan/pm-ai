@@ -55,7 +55,7 @@ def render_calculator_v2():
         font-size: 1.1em; 
         color: #000;
         padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
-        margin-bottom: -15px;  /* 입력창과 틈새 줄이기 */
+        margin-bottom: -5px;  /* 입력창과 틈새 줄이기 */
         position: relative; 
         z-index: 1;
     """
@@ -67,7 +67,7 @@ def render_calculator_v2():
         font-size: 0.95em; 
         color: #444; 
         padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
-        margin-top: -15px;     /* 입력창과 틈새 줄이기 */
+        margin-top: -20px;     /* 입력창과 틈새 줄이기 */
         position: relative;
         z-index: 1;
     """
@@ -83,7 +83,7 @@ def render_calculator_v2():
     # 1️⃣ 직대 파트너
     with c1:
         st.markdown(f"<div style='{label_style}'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
-        my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
+        my_partners = st.number_input("직대 파트너", min_value=1, max_value=20, key="my_partners_val", label_visibility="collapsed")
         st.markdown(f"<div style='{unit_style}'>명</div>", unsafe_allow_html=True)
 
     # 2️⃣ 파트너당 복제
