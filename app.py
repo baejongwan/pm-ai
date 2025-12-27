@@ -94,74 +94,69 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [★ 최후의 수단 CSS ★] 
-    # 1. min-width: fit-content (글자 크기보다 작아지지 마라 -> 겹침 해결)
-    # 2. flex-wrap: wrap (공간 없으면 내려가라 -> 가로 스크롤/잘림 해결)
-    # 3. width: auto (화면 꽉 채우지 마라 -> 세로 정렬 해결)
+    # [★ 문제 해결의 핵심 CSS ★]
     st.markdown("""
         <style>
-        /* 메뉴바 전체 틀 */
+        /* 1. 메뉴바 컨테이너: 무조건 가로 배치 + 줄바꿈 허용 + 중앙 정렬 */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;        /* 공간 부족하면 줄바꿈 */
-            justify-content: center !important; /* 가운데 정렬 */
-            gap: 6px !important;               /* 버튼 사이 간격 */
-            align-items: center !important;
+            flex-wrap: wrap !important;       /* 공간 부족하면 다음 줄로! (세로정렬 방지) */
+            justify-content: center !important; /* 중앙 정렬 */
+            gap: 8px !important;              /* 버튼 사이 간격 */
             padding-bottom: 10px !important;
+            align-items: center !important;
         }
 
-        /* 개별 버튼 기둥 (Column) - 여기가 핵심 */
+        /* 2. 개별 버튼의 '방(Column)': 절대 찌그러지지 마라 */
         div[data-testid="column"] {
-            flex: 0 1 auto !important;          /* 크기 자동 조절 */
-            width: auto !important;             /* 가로 100% 강제 확장 금지 */
-            min-width: fit-content !important;  /* ★절대 겹치지 않게 글자 크기 확보★ */
-            max-width: 100% !important;
+            flex: 0 0 auto !important;          /* 크기 자동 조절 (늘어나지 않음) */
+            width: auto !important;             /* 가로 100% 금지 */
+            min-width: max-content !important;  /* [핵심] 글자 크기보다 작아지지 마! (겹침 방지) */
         }
 
-        /* 모바일 화면 강제 적용 */
+        /* 3. 모바일 강제 적용 무력화 */
         @media (max-width: 640px) {
             div[data-testid="column"] {
                 width: auto !important;
-                min-width: fit-content !important;
+                min-width: max-content !important;
             }
         }
 
-        /* 버튼 디자인 (알약 모양) */
+        /* 4. 버튼 디자인 (알약 모양) */
         div.stButton > button {
             width: auto !important;
             height: auto !important;
-            padding: 6px 14px !important;
+            padding: 6px 16px !important;
             border-radius: 50px !important;
-            border: 1px solid #ddd;
+            border: 1px solid #e0e0e0;
             background-color: white;
             color: #555;
             font-size: 14px !important;
             font-weight: 600;
             margin: 0 !important;
-            white-space: nowrap !important; /* 버튼 안에서 줄바꿈 금지 */
+            white-space: nowrap !important; /* 글자 줄바꿈 금지 */
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        /* 마우스 호버 */
+        /* 5. 마우스 호버 효과 */
         div.stButton > button:hover {
             border-color: #007bff;
             color: #007bff;
             background-color: #f0f8ff;
         }
 
-        /* 클릭 시 */
+        /* 6. 선택된 버튼 강조 */
         div.stButton > button:focus:not(:active) {
             border-color: #007bff;
             color: #007bff;
             background-color: #e7f1ff;
         }
         
-        /* 아주 작은 폰 대응 */
-        @media (max-width: 380px) {
+        /* 7. 아주 작은 화면 폰트 조절 */
+        @media (max-width: 400px) {
             div.stButton > button {
-                padding: 5px 10px !important;
-                font-size: 12px !important;
+                padding: 5px 12px !important;
+                font-size: 13px !important;
             }
         }
         </style>
@@ -175,6 +170,7 @@ def render_top_navigation():
         is_active = (current_page == option)
         btn_type = "primary" if is_active else "secondary"
         
+        # 버튼 기능 연결 (새로고침 방지)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
