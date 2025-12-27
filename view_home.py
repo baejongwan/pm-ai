@@ -26,12 +26,12 @@ def render_admin_logs():
                 client = get_google_sheet_connection()
                 if client:
                     sheet = client.open("PM_AI_상담이력").sheet1
-                    data = sheet.get_all_records() # 모든 데이터 가져오기 (딕셔너리 리스트 형태)
+                    data = sheet.get_all_records() # 모든 데이터 가져오기
                     
                     if data:
                         df = pd.DataFrame(data)
                         
-                        # 최신순 정렬 (날짜시간 컬럼이 있다고 가정)
+                        # 최신순 정렬
                         if "날짜시간" in df.columns:
                             df = df.sort_values(by="날짜시간", ascending=False)
                             
@@ -49,11 +49,10 @@ def render_admin_logs():
                     else:
                         st.info("데이터는 연결되었으나, 아직 기록된 내용이 없습니다.")
                 else:
-                    st.error("구글 시트 연결에 실패했습니다. (Secrets 설정 확인 필요)")
+                    st.error("구글 시트 연결에 실패했습니다.")
                     
             except Exception as e:
                 st.error(f"데이터 로딩 중 오류 발생: {e}")
-                st.caption("팁: 구글 시트 이름이 'PM_AI_상담이력'인지, 봇 계정에 공유되었는지 확인하세요.")
                 
         elif password:
             st.error("⛔ 비밀번호가 틀렸습니다.")
@@ -64,8 +63,9 @@ def render_admin_logs():
 def render_home_dashboard(all_sheets):
     
     # [0] 방문자 수 (중복 증가 방지 로직 적용)
-    # 세션에 'cached_visitor_count'가 없으면 함수를 실행해서 카운트를 올리고 저장함.
-    # 이미 있으면 저장된 숫자만 보여줌.
+    # 앱이 실행되는 동안 'cached_visitor_count'라는 이름으로 방문자 수를 기억해둡니다.
+    # 만약 기억해둔게 없으면(첫 접속) 함수를 실행해서 카운트를 1 올리고 기억합니다.
+    # 기억해둔게 있으면(메뉴 이동 후 복귀) 함수를 실행하지 않고 기억된 숫자만 보여줍니다.
     if "cached_visitor_count" not in st.session_state:
         st.session_state.cached_visitor_count = get_daily_visitor_count()
         
