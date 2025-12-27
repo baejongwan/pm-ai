@@ -71,14 +71,31 @@ def render_calculator_v2():
     # [수정된 부분] 새로 만든 safe_counter_ui 함수 사용
     # 기존 number_counter와 똑같은 디자인을 내면서 오류는 안 나도록 처리
     # ----------------------------------------------------------------------
+# 1. 세션 상태 초기화
+    if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
+    if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
+    if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
+
+    # 2. 3단 컬럼 생성 및 레이아웃 구성
     c1, c2, c3 = st.columns(3)
     
-    with c1: 
-        my_partners = safe_counter_ui("1️⃣ 직대 파트너", "my_partners_val", 3, 1, 50, "명")
-    with c2: 
-        duplication = safe_counter_ui("2️⃣ 파트너당 복제", "duplication_val", 3, 1, 10, "명씩 소개")
-    with c3: 
-        generations = safe_counter_ui("3️⃣ 계산 깊이", "generations_val", 4, 1, 6, "세대(Level)")
+    # 1️⃣ 직대 파트너
+    with c1:
+        st.markdown("<div style='text-align: center; font-weight: bold;'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
+        my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
+        st.markdown("<div style='text-align: center; font-size: 0.9em;'>명</div>", unsafe_allow_html=True)
+
+    # 2️⃣ 파트너당 복제
+    with c2:
+        st.markdown("<div style='text-align: center; font-weight: bold;'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
+        duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
+        st.markdown("<div style='text-align: center; font-size: 0.9em;'>명씩 소개</div>", unsafe_allow_html=True)
+
+    # 3️⃣ 계산 깊이
+    with c3:
+        st.markdown("<div style='text-align: center; font-weight: bold;'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
+        generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
+        st.markdown("<div style='text-align: center; font-size: 0.9em;'>세대(Level)</div>", unsafe_allow_html=True)
         
     st.markdown("---")
     
