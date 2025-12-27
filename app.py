@@ -22,11 +22,14 @@ except: genai = None
 from config import *
 
 # --------------------------------------------------------------------------
-# [1] 기본 페이지 설정
+# [1] 기본 페이지 설정 (Manifest 방식 적용)
 # --------------------------------------------------------------------------
+
+# 1. 아이콘 및 매니페스트 주소
 ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
 
+# 2. 페이지 기본 설정
 st.set_page_config(
     page_title="PM 파트너스 허브", 
     page_icon=ICON_URL, 
@@ -34,27 +37,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# [핵심 수정] 아이콘 코드가 매번 실행되지 않도록 '한 번만' 실행하게 막습니다.
+# 3. [최종 병기] 아이콘 및 매니페스트 강제 주입
+# (수정사항: 매번 실행되어 깜빡이는 것을 방지하기 위해 한 번만 실행되도록 설정)
 if "icon_fixed" not in st.session_state:
     st.markdown(
         f"""
-        <head>
-            <link rel="manifest" href="{MANIFEST_URL}">
-            <link rel="apple-touch-icon" href="{ICON_URL}">
-            <link rel="shortcut icon" href="{ICON_URL}">
-        </head>
+        <link rel="manifest" href="{MANIFEST_URL}">
+        <link rel="apple-touch-icon" href="{ICON_URL}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{ICON_URL}">
+        <link rel="shortcut icon" href="{ICON_URL}">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="PM Hub">
         """,
         unsafe_allow_html=True
     )
-    st.session_state.icon_fixed = True  # "나 이제 설정 했어!" 하고 깃발 꽂기
+    st.session_state.icon_fixed = True
 
 # --------------------------------------------------------------------------
-# [2] 네비게이션 로직 (기억 유지)
+# [2] 네비게이션 로직 (수정사항: URL 방식 제거 -> 내부 기억 장치 사용)
 # --------------------------------------------------------------------------
+# URL(?page=...)을 쓰면 새로고침이 되므로, session_state로 페이지를 기억합니다.
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
-# 페이지 변경 함수 (콜백)
+# 페이지 변경 함수 (새로고침 없이 화면만 바꿈)
 def change_page(page_name):
     st.session_state.page = page_name
 
@@ -68,20 +75,27 @@ all_sheets = load_excel()
 # [4] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
-    logo_path = None
-    if os.path.exists("app_icon.png"): logo_path = "app_icon.png"
-    elif os.path.exists("home_logo.png"): logo_path = "home_logo.png"
-    
-    if logo_path:
-        with open(logo_path, "rb") as f:
-            img_b64 = base64.b64encode(f.read()).decode()
-        st.markdown(f"""
-            <div style="display: flex; justify-content: center; padding-top: 10px; padding-bottom: 5px;">
-                <img src="data:image/png;base64,{img_b64}" style="width: 120px; object-fit: contain;">
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("<h3 style='text-align:center; color:#003057;'>PM Partners</h3>", unsafe_allow_html=True)
+    # 로고는 현재 페이지가 '홈'일 때만 나오거나, 항상 나오거나 설정 가능
+    # (기존 로직 유지하되 session_state 기준)
+    if st.session_state.page == "홈":
+        logo_path = None
+        if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
+        elif os.path.exists("PMAILOGO.png"): logo_path = "PMAILOGO.png"
+        
+        if logo_path:
+            with open(logo_path, "rb") as f:
+                img_b64 = base64.b64encode(f.read()).decode()
+            st.markdown(f"""
+                <div style="display: flex; justify-content: center; padding-top: 10px; padding-bottom: 5px;">
+                    <img src="data:image/png;base64,{img_b64}" style="width: 120px; object-fit: contain;">
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+                <h3 style='text-align:center; color:#003057; margin-top:10px; margin-bottom:5px;'>
+                    PM Partners
+                </h3>
+            """, unsafe_allow_html=True)
 
 def render_top_navigation():
     menu_options = [
@@ -89,79 +103,80 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인 수정] 알약 모양(Pill Shape) CSS 적용
+    # [디자인 수정] 버튼을 기존 메뉴바처럼 보이게 하는 CSS
+    # 알약 모양이나 세로 리스트가 되지 않도록, 최대한 깔끔한 가로형 버튼으로 스타일링
     st.markdown("""
         <style>
-        /* 1. 버튼 간격 좁히기 (모바일에서 줄바꿈 최소화) */
-        div[data-testid="column"] { padding: 0 2px !important; }
+        /* 버튼 간격 조절 */
+        div[data-testid="column"] { padding: 0 !important; margin: 0 !important; min-width: 0px !important;}
         
-        /* 2. 버튼 기본 스타일 (알약 모양) */
+        /* 버튼 스타일 평면화 (링크처럼 보이게) */
         div.stButton > button {
             width: 100%;
-            border-radius: 30px;       /* 모서리를 둥글게 -> 알약 모양 핵심 */
-            border: 1px solid #ddd;    /* 얇은 테두리 */
-            background-color: white;   /* 배경 흰색 */
-            color: #555;               /* 글자색 회색 */
+            border: none;
+            border-radius: 0px;
+            background-color: transparent;
+            color: #555;
             font-size: 14px;
             font-weight: 600;
-            padding: 5px 0;            /* 위아래 여백 */
-            height: auto;
-            min-height: 40px;          /* 높이 통일 */
-            transition: all 0.2s;      /* 부드러운 효과 */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 살짝 그림자 */
+            padding: 10px 0;
+            margin: 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
         }
         
-        /* 3. 마우스 올렸을 때 */
+        /* 마우스 올렸을 때 */
         div.stButton > button:hover {
-            border-color: #007bff;
             color: #007bff;
-            background-color: #f0f8ff;
-            transform: translateY(-2px); /* 살짝 위로 떠오르는 효과 */
+            background-color: #f8f9fa;
         }
 
-        /* 4. 클릭했을 때 (눌리는 효과) */
-        div.stButton > button:active {
-            transform: translateY(0px);
-            box-shadow: none;
-        }
-
-        /* 5. 모바일 화면 대응 (글자 크기 자동 조절) */
+        /* 모바일 화면 대응 (글자 크기 자동 조절) */
         @media (max-width: 768px) {
             div.stButton > button { 
                 font-size: 11px; 
-                padding: 2px 0; 
-                border-radius: 15px; /* 모바일은 조금 덜 둥글게 */
-                min-height: 35px;
+                padding: 5px 0; 
             }
         }
         </style>
     """, unsafe_allow_html=True)
 
+    # 메뉴 개수만큼 컬럼 생성 (가로 배열 유지)
     cols = st.columns(len(menu_options))
     current_page = st.session_state.page
 
     for i, option in enumerate(menu_options):
         # 현재 선택된 메뉴인지 확인
         is_active = (current_page == option)
-        
-        # 선택된 버튼은 'primary' (색상 강조), 나머지는 'secondary' (흰색)
         btn_type = "primary" if is_active else "secondary"
         
-        # 버튼 그리기 (기능은 그대로 유지!)
+        # [핵심] a 태그(링크) 대신 button(버튼) 사용 -> 새로고침 방지!
         cols[i].button(
             option, 
             key=f"nav_{i}", 
             type=btn_type, 
             use_container_width=True,
-            on_click=change_page,
+            on_click=change_page, # 클릭 시 페이지 변경 함수 실행
             args=(option,)
         )
 
 # --------------------------------------------------------------------------
-# [5] 팝업창 설정
+# [5] 실행 (서버 목록에 있는 확실한 모델 이름 사용)
 # --------------------------------------------------------------------------
+api_key = GOOGLE_API_KEY
+selected_model = "gemini-flash-latest"
+
+if api_key:
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+    except Exception as e:
+        print(f"모델 설정 오류: {e}")
+        
+# [1] 7주년 행사 포스터 주소
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
+# [2] 정식 팝업창 기능 (st.dialog 사용)
 @st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
@@ -169,25 +184,22 @@ def show_promo_window():
     if st.button("닫기", type="primary", use_container_width=True):
         st.rerun()
 
-# 팝업 로직 (홈 화면 진입 시 1회만)
+# [3] 팝업 실행 로직 (접속 시 한 번만 뜨도록 설정)
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
-        st.session_state.home_popup_shown = True
+        st.session_state["home_popup_shown"] = True
 
-# --------------------------------------------------------------------------
-# [6] 화면 렌더링 실행
-# --------------------------------------------------------------------------
+# [4] 나머지 화면 렌더링
 render_home_logo()      
 render_top_navigation()
 
-target_page = st.session_state.page 
+# --------------------------------------------------------------------------
+# [6] 페이지 내용 표시
+# --------------------------------------------------------------------------
+# URL 파라미터가 아닌 session_state의 페이지를 바라봅니다.
+target_page = st.session_state.page
 
-# API 키 설정
-api_key = GOOGLE_API_KEY
-selected_model = "gemini-flash-latest"
-
-# 페이지 연결
 if target_page == "홈": view_home.render_home_dashboard(all_sheets)
 elif target_page == "AI상담": view_ai.render_ai_assistant(api_key, selected_model, all_sheets)
 elif target_page == "수익계산": view_compensation.render_calculator_v2()
@@ -199,4 +211,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
