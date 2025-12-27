@@ -96,37 +96,39 @@ def render_top_navigation():
     ]
     
     # [★ 디자인 해결의 핵심 CSS ★]
-    # 이 CSS는 버튼을 강제로 HTML 메뉴처럼 보이게 만듭니다.
-    # 모바일에서 세로로 서는 것을 막고, 글자 크기만큼만 공간을 차지하게 합니다.
+    # 이 CSS는 Streamlit이 모바일에서 세로로 강제 정렬하는 것을 '무력화'시킵니다.
+    # flex-direction: row !important; 명령어가 핵심입니다.
     st.markdown("""
         <style>
-        /* 1. 메뉴 컨테이너: 가로 배치, 줄바꿈 허용, 중앙 정렬 */
+        /* 1. 메뉴 컨테이너: 무조건 가로 배치 + 줄바꿈 허용 + 중앙 정렬 */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
-            flex-wrap: wrap !important;
-            justify-content: center !important;
-            gap: 6px !important;
-            padding-bottom: 10px !important;
+            flex-direction: row !important; /* 모바일에서도 가로 유지 */
+            flex-wrap: wrap !important;     /* 공간 없으면 다음 줄로 */
             align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;            /* 버튼 사이 간격 */
+            padding-bottom: 10px !important;
         }
 
         /* 2. 개별 버튼 기둥: 100% 폭 차지 금지, 내용물 크기만큼만! */
         div[data-testid="column"] {
             flex: 0 1 auto !important;  
             width: auto !important;
-            min-width: fit-content !important; /* 겹침 방지 */
-            max-width: 100% !important;
+            min-width: auto !important; 
         }
 
-        /* 3. 모바일(좁은 화면) 강제 적용 사항 */
+        /* 3. 모바일(좁은 화면) 강제 적용 사항 - 여기가 제일 중요합니다 */
         @media (max-width: 640px) {
+            div[data-testid="stHorizontalBlock"] {
+                flex-direction: row !important; /* 세로 정렬 절대 금지 */
+                display: flex !important;
+                flex-wrap: wrap !important;
+            }
             div[data-testid="column"] {
                 width: auto !important;
-                min-width: fit-content !important;
-            }
-            /* Streamlit의 기본 모바일 세로 정렬 무력화 */
-            div[data-testid="stHorizontalBlock"] {
-                flex-direction: row !important;
+                min-width: auto !important;
+                flex: 0 1 auto !important;
             }
         }
 
@@ -161,10 +163,10 @@ def render_top_navigation():
         }
         
         /* 7. 아주 작은 폰트 대응 */
-        @media (max-width: 380px) {
+        @media (max-width: 400px) {
             div.stButton > button {
                 padding: 4px 10px !important;
-                font-size: 13px !important;
+                font-size: 12px !important;
             }
         }
         </style>
