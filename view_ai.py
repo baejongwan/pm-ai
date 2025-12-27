@@ -24,6 +24,7 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
     st.markdown("<h2 style='text-align:center;'>🤖 PM AI 상담</h2>", unsafe_allow_html=True)
 
     # --- 사용자 정보 입력 폼 ---
+    # [방어 로직 1] 이미 입력한 정보가 세션에 있다면 입력 폼을 건너뜁니다.
     if "user_info" not in st.session_state:
         st.markdown("""
             <div style="background-color:#f8f9fa; padding:20px; border-radius:15px; border:1px solid #eee; margin-bottom:20px;">
@@ -46,6 +47,7 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
             
             if st.form_submit_button("상담 시작하기 🚀", use_container_width=True, type="primary"):
                 final_condition = condition_input.strip() if condition_input.strip() else "특이사항 없음"
+                # 세션에 저장 (페이지 이동해도 유지)
                 st.session_state.user_info = {"age": age, "gender": gender, "conditions": [final_condition]}
                 st.rerun()
         return
@@ -55,6 +57,8 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
     info_text = f"{user_info['age']}세 {user_info['gender']}, 관심사: {', '.join(user_info['conditions'])}"
     st.info(f"✅ **프로필:** {info_text}")
     
+    # [방어 로직 2] 대화 기록이 아예 없을 때만(최초 1회) 생성합니다.
+    # 이미 대화 내용이 있다면 이 부분은 무시하고 지나갑니다 (초기화 방지).
     if "messages" not in st.session_state:
         # 최초 1회만 정중하게 인사
         greeting = f"안녕하세요! {MAIN_CONTACT_NAME} 산하 AI 전문 비서입니다.\n건강이나 제품에 대해 궁금한 점을 말씀해 주세요."
@@ -107,7 +111,7 @@ def render_ai_assistant(api_key, selected_model, all_sheets):
                 1. **인사말 금지:** "안녕하세요", "반갑습니다" 같은 인사를 **절대** 하지 마세요. 질문에 대한 **결론부터 즉시** 답변하세요.
                 2. **전문성 및 구조화:** 답변은 전문가처럼 확신에 찬 어조로 작성하세요. 가독성을 위해 **글머리 기호(Bullets)**나 **볼드체**를 적극 사용하세요.
                 3. **데이터 활용:** - 제공된 [내부 데이터베이스]에 답이 있다면 그 수치와 근거를 정확히 인용하세요.
-                   - 데이터가 없다면, 당신이 가진 **일반적인 영양학/생리학/비즈니스 전문 지식**을 활용하여 최고 수준의 답변을 제공하세요. "데이터가 없습니다"라고 말하지 말고, 외부 지식으로 해결하세요.
+                    - 데이터가 없다면, 당신이 가진 **일반적인 영양학/생리학/비즈니스 전문 지식**을 활용하여 최고 수준의 답변을 제공하세요. "데이터가 없습니다"라고 말하지 말고, 외부 지식으로 해결하세요.
                 4. **공감과 맞춤:** 사용자의 연령과 건강 관심사를 고려하여, 그들에게 실질적인 도움이 되는 조언을 덧붙이세요.
 
                 [내부 데이터베이스]
