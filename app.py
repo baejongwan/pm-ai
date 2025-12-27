@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 아이콘 고정 로직 (새로고침 방지)
+# 아이콘 고정 로직
 if "icon_fixed" not in st.session_state:
     st.markdown(
         f"""
@@ -56,7 +56,6 @@ if "icon_fixed" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
-# 페이지 변경 함수
 def change_page(page_name):
     st.session_state.page = page_name
 
@@ -96,37 +95,37 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [디자인 핵심 수정] 모바일 중앙 정렬 & 자동 줄바꿈 CSS
+    # [디자인 해결] 예전 HTML 방식처럼 '가운데 정렬' + '자연스러운 줄바꿈' 강제 적용
     st.markdown("""
         <style>
-        /* 1. 버튼들을 감싸는 전체 틀을 'Flexbox'로 만듭니다. */
+        /* 1. 메뉴바 전체 틀을 가운데 정렬 */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
-            flex-wrap: wrap !important;      /* 공간 부족하면 다음 줄로 */
-            justify-content: center !important; /* ★중앙 정렬 핵심★ */
-            gap: 6px !important;             /* 버튼 사이 간격 */
-            padding-bottom: 10px;
+            flex-wrap: wrap !important;       /* 줄바꿈 허용 */
+            justify-content: center !important; /* ★가로 중앙 정렬★ */
+            gap: 8px !important;              /* 버튼 사이 간격 */
+            padding: 10px 0;
         }
-        
-        /* 2. 기둥(Column)이 멋대로 늘어나지 못하게 막습니다. */
+
+        /* 2. 각각의 버튼 기둥(Column)이 화면을 꽉 채우지 못하게 막음 */
         div[data-testid="column"] {
-            flex: 0 1 auto !important;  /* 내용물 크기만큼만 차지 */
-            width: auto !important;     /* 가로 꽉 채우기 금지 */
-            min-width: 0 !important;    /* 최소 너비 제한 해제 */
+            flex: 0 0 auto !important;  /* 크기 자동 조절 */
+            width: auto !important;     /* 내용물만큼만 너비 차지 */
+            min-width: 0 !important;
         }
         
-        /* 3. 버튼 스타일 (알약 모양) */
+        /* 3. 버튼 디자인 (예쁜 알약 모양) */
         div.stButton > button {
             width: auto !important;
-            height: auto !important;
-            padding: 6px 16px !important; /* 좌우 여백을 넉넉히 줌 */
-            font-size: 14px !important;
-            border-radius: 20px !important; /* 둥근 알약 */
+            padding: 6px 14px !important;
+            border-radius: 20px !important;
             border: 1px solid #e0e0e0;
             background-color: white;
             color: #555;
+            font-size: 14px !important;
+            font-weight: 500;
             margin: 0 !important;
-            white-space: nowrap !important; /* 글자 줄바꿈 금지 */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         /* 4. 마우스 올렸을 때 */
@@ -135,7 +134,7 @@ def render_top_navigation():
             color: #007bff;
             background-color: #f0f8ff;
         }
-        
+
         /* 5. 선택된 버튼 강조 */
         div.stButton > button:focus:not(:active) {
             border-color: #007bff;
@@ -143,17 +142,17 @@ def render_top_navigation():
             background-color: #e7f1ff;
         }
         
-        /* 6. 모바일 화면 미세 조정 */
-        @media (max-width: 400px) {
+        /* 6. 모바일 미세 조정 */
+        @media (max-width: 500px) {
             div.stButton > button {
                 padding: 5px 10px !important;
-                font-size: 12px !important;
+                font-size: 13px !important;
             }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 버튼 배치
+    # 버튼 생성
     cols = st.columns(len(menu_options))
     current_page = st.session_state.page
 
@@ -161,7 +160,7 @@ def render_top_navigation():
         is_active = (current_page == option)
         btn_type = "primary" if is_active else "secondary"
         
-        # [기능 유지] st.button 사용 (새로고침 방지)
+        # 버튼 기능 연결 (새로고침 방지)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
