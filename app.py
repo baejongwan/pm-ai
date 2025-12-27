@@ -125,7 +125,7 @@ def render_top_navigation():
 # [5] 팝업창 설정
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-selected_model = "gemini-pro" #gemini-1.5-flash,gemini-flash-latest,gemini-pro
+selected_model = "gemini-flash-latest" #gemini-1.5-flash,gemini-flash-latest,gemini-pro
 
 if api_key:
     try:
@@ -189,6 +189,7 @@ elif target_page == "성공사례": view_stories.render_success(all_sheets)
 # [버전 확인용 코드 - 확인 후 지우세요]
 import google.generativeai as genai
 st.warning(f"현재 설치된 AI 버전: {genai.__version__}")
+
 
 
 
