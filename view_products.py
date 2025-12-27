@@ -64,7 +64,6 @@ def render_safety(all_sheets):
         for idx, row in df.iterrows():
             st.markdown(f'<div class="cert-box">', unsafe_allow_html=True)
             
-            # 이미지 영역 비율 확대 (3:7)
             c1, c2 = st.columns([3, 7])
             
             with c1:
@@ -94,10 +93,9 @@ def render_safety(all_sheets):
             st.markdown("---")
 
 # --------------------------------------------------------------------------
-# 3. 액티바이즈 진단 (수정 완료: 메뉴바 스타일 + 탭 구조 복구)
+# 3. 액티바이즈 진단 (수정 완료: 사용자 엑셀 컬럼 '구분,반응,증상,이미지' 반영)
 # --------------------------------------------------------------------------
 def render_diagnosis(all_sheets):
-    # NameError 방지를 위해 import가 되어있지만, 안전하게 try-except 처리 혹은 그대로 사용
     try:
         apply_custom_styles()
     except:
@@ -106,22 +104,32 @@ def render_diagnosis(all_sheets):
     st.markdown("## 🩺 액티바이즈 반응 분석")
     st.info("💡 신체 부위를 선택하면 나타나는 반응의 원인과 호전 반응을 확인할 수 있습니다.")
 
-    # [수정] 탭 생성 (이 부분이 빠져 있어서 sub2 오류가 났을 수 있습니다)
     sub1, sub2 = st.tabs(["🤕 부위별 반응", "😋 맛 별 체크"])
 
     # --- [탭 1] 부위별 반응 ---
     with sub1:
-        target_sheet = get_sheet_data(all_sheets, '액티증상')
+        # 1. 시트 찾기 (액티바이즈, 액티증상 등)
+        target_sheet = None
+        possible_names = ['액티바이즈', '액티증상', '호전반응', '반응']
+        
+        for name in possible_names:
+            target_sheet = get_sheet_data(all_sheets, name)
+            if target_sheet is not None:
+                break
         
         if target_sheet is not None:
             df = target_sheet.fillna("")
             
-            if '부위' in df.columns:
-                parts = df['부위'].unique().tolist()
+            # 2. 컬럼 매핑 (사장님 파일 구조: 구분, 반응, 증상, 이미지)
+            # 만약 '구분' 컬럼이 있으면 그걸 사용하고, 없으면 '부위'를 사용하도록 유연하게 처리
+            part_col = '구분' if '구분' in df.columns else ('부위' if '부위' in df.columns else None)
+            
+            if part_col:
+                parts = df[part_col].unique().tolist()
                 
                 st.write("### 👇 부위를 선택하세요")
                 
-                # [핵심 수정] selectbox -> st.pills (메뉴바 스타일)
+                # 메뉴바(알약) 스타일
                 try:
                     selected_part = st.pills(
                         label="부위 선택",
@@ -131,7 +139,6 @@ def render_diagnosis(all_sheets):
                         label_visibility="collapsed"
                     )
                 except AttributeError:
-                    # Streamlit 구버전 호환
                     selected_part = st.radio(
                         "부위 선택",
                         options=parts,
@@ -142,39 +149,65 @@ def render_diagnosis(all_sheets):
                 st.markdown("---")
 
                 if selected_part:
-                    filtered_df = df[df['부위'] == selected_part]
+                    filtered_df = df[df[part_col] == selected_part]
                     
                     if not filtered_df.empty:
                         for idx, row in filtered_df.iterrows():
-                            symptom = row.get('증상', '증상 정보 없음')
-                            cause = row.get('원인', '-')
-                            solution = row.get('대처', '-')
+                            # [핵심] 컬럼 연결
+                            # 반응 -> (UI) 나타나는 반응
+                            # 증상 -> (UI) 원인 및 분석
+                            symptom = row.get('반응') if '반응' in df.columns else row.get('증상', '-')
+                            cause = row.get('증상') if '반응' in df.columns else row.get('원인', '-') 
+                            # (설명: '반응' 컬럼이 있으면 그게 증상이고, '증상' 컬럼은 원인/해설로 씁니다)
                             
+                            image_url = row.get('이미지') # 이미지 컬럼
+
                             st.success(f"### 📍 {selected_part}")
                             
-                            c1, c2 = st.columns([1, 2])
-                            with c1:
-                                st.markdown(f"**🔥 나타나는 증상**")
-                                st.write(symptom)
-                            with c2:
-                                st.markdown(f"**🧐 원인 및 분석**")
-                                st.info(cause)
-                                
-                            if solution and solution != '-':
-                                with st.expander("💡 호전 반응 및 대처 가이드", expanded=True):
-                                    st.write(solution)
+                            # 레이아웃: 이미지가 있으면 3단, 없으면 2단
+                            has_image = image_url and str(image_url).strip() != ""
+                            
+                            if has_image:
+                                c1, c2, c3 = st.columns([1.5, 2, 2])
+                                with c1:
+                                    st.image(get_optimized_image(image_url), use_container_width=True)
+                                with c2:
+                                    st.markdown(f"**🔥 나타나는 반응**")
+                                    st.write(symptom)
+                                with c3:
+                                    st.markdown(f"**🧐 원인 및 분석**")
+                                    st.info(cause)
+                            else:
+                                c1, c2 = st.columns([1, 2])
+                                with c1:
+                                    st.markdown(f"**🔥 나타나는 반응**")
+                                    st.write(symptom)
+                                with c2:
+                                    st.markdown(f"**🧐 원인 및 분석**")
+                                    st.info(cause)
+                            
+                            # 대처나 호전반응 컬럼이 따로 있다면 추가 표시 (옵션)
+                            extra_solution = row.get('대처') or row.get('호전반응')
+                            if extra_solution:
+                                with st.expander("💡 추가 가이드", expanded=True):
+                                    st.write(extra_solution)
+
                     else:
                         st.warning("해당 부위에 대한 상세 데이터가 없습니다.")
             else:
-                st.error("엑셀 파일에 '부위' 컬럼이 없습니다.")
+                st.error(f"엑셀 파일에 '구분' 또는 '부위' 컬럼이 없습니다. (현재 컬럼: {list(df.columns)})")
         else:
-            st.error("'액티증상' 시트를 찾을 수 없습니다.")
+            st.error("🚨 엑셀에서 '액티바이즈' 관련 시트를 찾을 수 없습니다.")
 
     # --- [탭 2] 맛 체크 ---
     with sub2:
-        target_taste = get_sheet_data(all_sheets, "맛")
-        if target_taste is None:
-            target_taste = get_sheet_data(all_sheets, "맛체크")
+        target_taste = None
+        possible_taste_names = ['맛', '맛체크', '맛반응']
+        
+        for name in possible_taste_names:
+            target_taste = get_sheet_data(all_sheets, name)
+            if target_taste is not None:
+                break
 
         if target_taste is not None:
             df_t = target_taste.fillna("")
