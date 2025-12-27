@@ -54,7 +54,7 @@ def render_calculator_v2():
         font-weight: 800; 
         font-size: 1.0em; 
         color: #000;
-        padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
+        padding-right: 4rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
         margin-bottom: -3px;  /* 입력창과 틈새 줄이기 */
         position: relative; 
         z-index: 1;
@@ -66,7 +66,7 @@ def render_calculator_v2():
         font-weight: 800; 
         font-size: 0.80em; 
         color: #444; 
-        padding-right: 3rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
+        padding-right: 4rem;   /* 버튼 크기만큼 왼쪽으로 이동 */
         margin-top: -25px;     /* 입력창과 틈새 줄이기 */
         position: relative;
         z-index: 1;
