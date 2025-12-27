@@ -2,7 +2,32 @@ import streamlit as st
 from utils import get_optimized_image
 from components import apply_custom_styles
 
-# 1. 보상플랜 핵심요약 (기존 유지)
+# [핵심] 기존 디자인을 유지하면서 '오류만 제거한' 안전한 카운터 함수 생성
+def safe_counter_ui(label, key, default_val, min_v, max_v, unit_text):
+    # 1. 세션 상태에 값이 없을 때만 초기값 설정 (오류 원인 차단)
+    if key not in st.session_state:
+        st.session_state[key] = default_val
+
+    # 2. 디자인 구현 (라벨과 입력창을 깔끔하게 배치)
+    st.markdown(f"**{label}**") # 라벨을 진하게 표시
+    
+    # 입력창과 단위 텍스트 배치
+    c_input, c_unit = st.columns([2, 1])
+    with c_input:
+        # value=... 옵션을 빼고 key로만 제어하여 충돌 방지
+        val = st.number_input(
+            label=label,
+            min_value=min_v,
+            max_value=max_v,
+            key=key,
+            label_visibility="collapsed" # 입력창 위 중복 라벨 숨김
+        )
+    with c_unit:
+        st.markdown(f"<div style='padding-top: 10px;'>{unit_text}</div>", unsafe_allow_html=True)
+    
+    return val
+
+# 1. 보상플랜 핵심요약 (기존 코드 유지)
 def render_compensation(all_sheets):
     apply_custom_styles()
     st.markdown("## 📚 보상플랜 핵심요약")
@@ -28,7 +53,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정 완료: 오류 해결 + 140GV 로직 유지)
+# 2. 수익 시뮬레이션 (수정 완료: 디자인 복구 + 오류 해결)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -43,32 +68,23 @@ def render_calculator_v2():
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 위젯 초기화 로직 변경 (오류 원인 제거)
-    # number_counter 대신 st.number_input을 직접 사용하여 충돌 방지
+    # [수정된 부분] 새로 만든 safe_counter_ui 함수 사용
+    # 기존 number_counter와 똑같은 디자인을 내면서 오류는 안 나도록 처리
     # ----------------------------------------------------------------------
-    
-    # 1. 세션 상태에 값이 없으면 초기값 설정
-    if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
-    if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
-    if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
-
-    # 2. 위젯 생성 (value 옵션을 제거하고 key로만 제어)
     c1, c2, c3 = st.columns(3)
+    
     with c1: 
-        my_partners = st.number_input("1️⃣ 직대 파트너 (명)", min_value=1, max_value=50, key="my_partners_val")
+        my_partners = safe_counter_ui("1️⃣ 직대 파트너", "my_partners_val", 3, 1, 50, "명")
     with c2: 
-        duplication = st.number_input("2️⃣ 파트너당 복제 (명)", min_value=1, max_value=10, key="duplication_val")
+        duplication = safe_counter_ui("2️⃣ 파트너당 복제", "duplication_val", 3, 1, 10, "명씩 소개")
     with c3: 
-        generations = st.number_input("3️⃣ 계산 깊이 (세대)", min_value=1, max_value=6, key="generations_val")
+        generations = safe_counter_ui("3️⃣ 계산 깊이", "generations_val", 4, 1, 6, "세대(Level)")
         
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [기존 유지] 가격 및 GV 설정 (오토십 + 액티바이즈)
+    # [기존 로직 유지] 140GV 기준 계산
     # ----------------------------------------------------------------------
-    # 가격 기준: 오토십(약 137,100원) + 액티바이즈(약 42,600원) = 179,700원
-    # 포인트 기준: 오토십(103GV) + 액티바이즈(37GV) = 140GV
-    
     UNIT_PRICE = 179700  # 1인당 월 평균 구매액
     UNIT_GV = 140        # 1인당 월 평균 포인트 (103 + 37)
     
