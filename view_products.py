@@ -93,7 +93,7 @@ def render_safety(all_sheets):
             st.markdown("---")
 
 # --------------------------------------------------------------------------
-# 3. 액티바이즈 진단 (수정 완료: 사용자 엑셀 컬럼 '구분,반응,증상,이미지' 반영)
+# 3. 액티바이즈 진단 (수정 완료: 대표 이미지 1개 + 상세 리스트 하단 배치)
 # --------------------------------------------------------------------------
 def render_diagnosis(all_sheets):
     try:
@@ -108,7 +108,6 @@ def render_diagnosis(all_sheets):
 
     # --- [탭 1] 부위별 반응 ---
     with sub1:
-        # 1. 시트 찾기 (액티바이즈, 액티증상 등)
         target_sheet = None
         possible_names = ['액티바이즈', '액티증상', '호전반응', '반응']
         
@@ -120,8 +119,7 @@ def render_diagnosis(all_sheets):
         if target_sheet is not None:
             df = target_sheet.fillna("")
             
-            # 2. 컬럼 매핑 (사장님 파일 구조: 구분, 반응, 증상, 이미지)
-            # 만약 '구분' 컬럼이 있으면 그걸 사용하고, 없으면 '부위'를 사용하도록 유연하게 처리
+            # 컬럼 매핑 ('구분'을 최우선으로 찾음)
             part_col = '구분' if '구분' in df.columns else ('부위' if '부위' in df.columns else None)
             
             if part_col:
@@ -152,50 +150,46 @@ def render_diagnosis(all_sheets):
                     filtered_df = df[df[part_col] == selected_part]
                     
                     if not filtered_df.empty:
+                        # [핵심 수정 1] 대표 이미지 출력 (첫 번째 행의 이미지 사용)
+                        first_row = filtered_df.iloc[0]
+                        rep_image = first_row.get('이미지')
+                        
+                        if rep_image and str(rep_image).strip() != "":
+                            # 이미지를 중앙에 적당한 크기로 배치
+                            c_img1, c_img2, c_img3 = st.columns([1, 2, 1])
+                            with c_img2:
+                                st.image(get_optimized_image(rep_image), use_container_width=True)
+                        
+                        st.markdown(f"### 📍 {selected_part} 상세 분석")
+                        
+                        # [핵심 수정 2] 텍스트 리스트 출력
                         for idx, row in filtered_df.iterrows():
-                            # [핵심] 컬럼 연결
-                            # 반응 -> (UI) 나타나는 반응
-                            # 증상 -> (UI) 원인 및 분석
+                            # 컬럼 연결
                             symptom = row.get('반응') if '반응' in df.columns else row.get('증상', '-')
                             cause = row.get('증상') if '반응' in df.columns else row.get('원인', '-') 
-                            # (설명: '반응' 컬럼이 있으면 그게 증상이고, '증상' 컬럼은 원인/해설로 씁니다)
                             
-                            image_url = row.get('이미지') # 이미지 컬럼
-
-                            st.success(f"### 📍 {selected_part}")
-                            
-                            # 레이아웃: 이미지가 있으면 3단, 없으면 2단
-                            has_image = image_url and str(image_url).strip() != ""
-                            
-                            if has_image:
-                                c1, c2, c3 = st.columns([1.5, 2, 2])
-                                with c1:
-                                    st.image(get_optimized_image(image_url), use_container_width=True)
-                                with c2:
-                                    st.markdown(f"**🔥 나타나는 반응**")
-                                    st.write(symptom)
-                                with c3:
-                                    st.markdown(f"**🧐 원인 및 분석**")
-                                    st.info(cause)
-                            else:
+                            # 리스트 형태로 깔끔하게 표시
+                            with st.container():
                                 c1, c2 = st.columns([1, 2])
                                 with c1:
                                     st.markdown(f"**🔥 나타나는 반응**")
-                                    st.write(symptom)
+                                    st.warning(symptom) # 강조를 위해 warning 박스 사용
                                 with c2:
                                     st.markdown(f"**🧐 원인 및 분석**")
-                                    st.info(cause)
-                            
-                            # 대처나 호전반응 컬럼이 따로 있다면 추가 표시 (옵션)
-                            extra_solution = row.get('대처') or row.get('호전반응')
-                            if extra_solution:
-                                with st.expander("💡 추가 가이드", expanded=True):
-                                    st.write(extra_solution)
+                                    st.info(cause)      # 정보는 info 박스 사용
+                                
+                                # 추가 가이드 (대처 등)
+                                extra_solution = row.get('대처') or row.get('호전반응')
+                                if extra_solution:
+                                    with st.expander("💡 추가 가이드", expanded=False):
+                                        st.write(extra_solution)
+                                
+                                st.divider() # 구분선 추가
 
                     else:
                         st.warning("해당 부위에 대한 상세 데이터가 없습니다.")
             else:
-                st.error(f"엑셀 파일에 '구분' 또는 '부위' 컬럼이 없습니다. (현재 컬럼: {list(df.columns)})")
+                st.error(f"엑셀 파일에 '구분' 또는 '부위' 컬럼이 없습니다.")
         else:
             st.error("🚨 엑셀에서 '액티바이즈' 관련 시트를 찾을 수 없습니다.")
 
