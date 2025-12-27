@@ -94,44 +94,36 @@ def render_top_navigation():
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # [★ 정밀 수정된 CSS ★]
-    # 과거의 HTML 방식처럼 자연스러운 흐름을 만들기 위해 'max-content' 속성을 사용합니다.
+    # [★ 문제 해결의 열쇠 ★]
+    # flex-wrap: wrap -> "자리가 없으면 겹치지 말고 다음 줄로 내려가라!"
+    # min-width: fit-content -> "글자 크기보다 절대 작아지지 마라!"
     st.markdown("""
         <style>
-        /* 1. 전체 메뉴바 틀 */
+        /* 1. 메뉴바 전체 틀 */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;        /* 공간 부족하면 줄바꿈 (필수) */
-            justify-content: center !important; /* 가운데 정렬 (필수) */
-            gap: 8px !important;               /* 버튼 간격 */
+            flex-wrap: wrap !important;        /* ★핵심: 줄바꿈 허용★ */
+            justify-content: center !important; /* 중앙 정렬 */
+            gap: 8px !important;               /* 버튼 사이 간격 */
             padding-bottom: 10px !important;
             align-items: center !important;
         }
 
-        /* 2. 버튼이 들어가는 기둥 (Column) 설정 - 여기가 핵심 문제입니다. */
+        /* 2. 개별 버튼 기둥 (Column) */
         div[data-testid="column"] {
-            /* flex: 0 0 auto -> 늘어나지도(grow=0), 줄어들지도(shrink=0), 크기는 내용물만큼(auto) */
-            flex: 0 0 auto !important; 
-            
-            /* 가로 100% 꽉 채우기 금지 */
-            width: auto !important;
-            
-            /* [중요] 내용물(글자) 크기보다 절대 작아지지 마라 -> 겹침 방지 */
-            min-width: max-content !important; 
+            flex: 0 0 auto !important;          /* 크기 자동 조절 (늘어나거나 줄어들지 않음) */
+            width: auto !important;             /* 가로 100% 금지 */
+            min-width: fit-content !important;  /* ★핵심: 글자 크기 유지 (겹침 방지)★ */
         }
 
-        /* 3. 모바일 화면(좁은 화면)에서 강제로 세로로 늘어나는 것 방지 */
+        /* 3. 모바일 화면 강제 적용 (세로 정렬 방지) */
         @media (max-width: 640px) {
+            div[data-testid="stHorizontalBlock"] {
+                flex-direction: row !important; /* 가로 배치 강제 */
+            }
             div[data-testid="column"] {
                 width: auto !important;
-                min-width: max-content !important;
-                flex: 0 0 auto !important;
-            }
-            /* 모바일에서도 가로 정렬 강제 유지 */
-            div[data-testid="stHorizontalBlock"] {
-                flex-direction: row !important;
-                justify-content: center !important;
+                min-width: fit-content !important;
             }
         }
 
@@ -141,16 +133,13 @@ def render_top_navigation():
             height: auto !important;
             padding: 6px 14px !important;
             border-radius: 50px !important;
-            border: 1px solid #ddd;
+            border: 1px solid #e0e0e0;
             background-color: white;
             color: #555;
             font-size: 14px !important;
             font-weight: 600;
             margin: 0 !important;
-            
-            /* 글자가 줄바꿈되어 버튼이 찌그러지는 것 방지 */
-            white-space: nowrap !important; 
-            
+            white-space: nowrap !important; /* 글자 줄바꿈 금지 */
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
@@ -186,6 +175,7 @@ def render_top_navigation():
         is_active = (current_page == option)
         btn_type = "primary" if is_active else "secondary"
         
+        # 버튼 기능 연결 (새로고침 방지)
         cols[i].button(
             option, 
             key=f"nav_{i}", 
