@@ -16,7 +16,7 @@ import view_stories
 from utils import load_excel
 
 # [오류 해결] 여기서 두 줄이 붙어있던 것을 떼어냈습니다.
-from config import * warnings.filterwarnings("ignore")
+from config import warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -171,3 +171,4 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
