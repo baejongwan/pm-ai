@@ -93,106 +93,55 @@ def render_top_navigation():
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
-    
-    # [★ 정밀 수정된 CSS ★]
-    # 과거의 HTML 방식처럼 자연스러운 흐름을 만들기 위해 'max-content' 속성을 사용합니다.
+
     st.markdown("""
         <style>
-        /* 1. 전체 메뉴바 틀 */
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;        /* 공간 부족하면 줄바꿈 (필수) */
-            justify-content: center !important; /* 가운데 정렬 (필수) */
-            gap: 8px !important;               /* 버튼 간격 */
-            padding-bottom: 10px !important;
-            align-items: center !important;
+        .menu-bar {
+            display: flex;
+            flex-wrap: wrap;              /* 공간 부족하면 자동 줄바꿈 */
+            justify-content: center;      /* 항상 가운데 정렬 */
+            gap: 8px;                     /* 버튼 간격 */
+            padding: 10px 0;
         }
-
-        /* 2. 버튼이 들어가는 기둥 (Column) 설정 - 여기가 핵심 문제입니다. */
-        div[data-testid="column"] {
-            /* flex: 0 0 auto -> 늘어나지도(grow=0), 줄어들지도(shrink=0), 크기는 내용물만큼(auto) */
-            flex: 0 0 auto !important; 
-            
-            /* 가로 100% 꽉 채우기 금지 */
-            width: auto !important;
-            
-            /* [중요] 내용물(글자) 크기보다 절대 작아지지 마라 -> 겹침 방지 */
-            min-width: max-content !important; 
-        }
-
-        /* 3. 모바일 화면(좁은 화면)에서 강제로 세로로 늘어나는 것 방지 */
-        @media (max-width: 640px) {
-            div[data-testid="column"] {
-                width: auto !important;
-                min-width: max-content !important;
-                flex: 0 0 auto !important;
-            }
-            /* 모바일에서도 가로 정렬 강제 유지 */
-            div[data-testid="stHorizontalBlock"] {
-                flex-direction: row !important;
-                justify-content: center !important;
-            }
-        }
-
-        /* 4. 버튼 디자인 (알약 모양) */
-        div.stButton > button {
-            width: auto !important;
-            height: auto !important;
-            padding: 6px 14px !important;
-            border-radius: 50px !important;
+        .menu-bar button {
+            padding: 6px 14px;
+            border-radius: 50px;
             border: 1px solid #ddd;
             background-color: white;
             color: #555;
-            font-size: 14px !important;
+            font-size: 14px;
             font-weight: 600;
-            margin: 0 !important;
-            
-            /* 글자가 줄바꿈되어 버튼이 찌그러지는 것 방지 */
-            white-space: nowrap !important; 
-            
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            white-space: nowrap;          /* 글자 줄바꿈 방지 */
+            cursor: pointer;
         }
-
-        /* 마우스 호버 */
-        div.stButton > button:hover {
+        .menu-bar button:hover {
             border-color: #007bff;
             color: #007bff;
             background-color: #f0f8ff;
         }
-
-        /* 클릭 시 */
-        div.stButton > button:focus:not(:active) {
+        .menu-bar button.active {
             border-color: #007bff;
             color: #007bff;
             background-color: #e7f1ff;
         }
-        
-        /* 5. 아주 작은 폰트 대응 */
-        @media (max-width: 380px) {
-            div.stButton > button {
-                padding: 4px 10px !important;
-                font-size: 12px !important;
-            }
-        }
         </style>
     """, unsafe_allow_html=True)
 
-    # 컬럼 생성 및 버튼 배치
-    cols = st.columns(len(menu_options))
+    # 현재 페이지 상태 확인
     current_page = st.session_state.page
 
-    for i, option in enumerate(menu_options):
-        is_active = (current_page == option)
-        btn_type = "primary" if is_active else "secondary"
-        
-        cols[i].button(
-            option, 
-            key=f"nav_{i}", 
-            type=btn_type, 
-            on_click=change_page, 
-            args=(option,)
-        )
+    # 버튼을 HTML로 출력
+    buttons_html = "<div class='menu-bar'>"
+    for option in menu_options:
+        active_class = "active" if current_page == option else ""
+        buttons_html += f"""
+            <form action="#" method="post" style="display:inline;">
+                <button class="{active_class}" name="page" value="{option}">{option}</button>
+            </form>
+        """
+    buttons_html += "</div>"
+
+    st.markdown(buttons_html, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
 # [5] 실행 설정
@@ -244,3 +193,4 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
