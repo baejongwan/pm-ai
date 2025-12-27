@@ -1,6 +1,6 @@
 import streamlit as st
 from utils import get_optimized_image
-from components import apply_custom_styles, number_counter
+from components import apply_custom_styles
 
 # 1. 보상플랜 핵심요약 (기존 유지)
 def render_compensation(all_sheets):
@@ -28,7 +28,7 @@ def render_compensation(all_sheets):
                         with cols[idx]: st.image(img_src, use_container_width=True)
     else: st.info("보상플랜 데이터가 없습니다.")
 
-# 2. 수익 시뮬레이션 (수정됨: 140GV 기준)
+# 2. 수익 시뮬레이션 (수정 완료: 텍스트 위치 미세 조정 + 굵기 강화)
 def render_calculator_v2():
     apply_custom_styles()
     st.markdown("## 💸 수익 & 직급 시뮬레이션")
@@ -41,30 +41,54 @@ def render_calculator_v2():
         3. 실제소득은 **월 예상 수령액**보다 더 높은 수익을 받습니다.
         """)
     st.markdown("---")
+    
+    # ----------------------------------------------------------------------
+    # [수정된 부분] 
+    # 1. 텍스트 정렬 보정: 오른쪽 버튼 너비만큼 padding-right를 줘서 왼쪽으로 이동
+    # 2. 글자 굵기: font-weight: 900 (아주 굵게) 적용
+    # ----------------------------------------------------------------------
+    
+    # 스타일 정의 (오른쪽 버튼 크기 약 2.5rem 만큼 여백을 주어 시각적 중앙 맞춤)
+    label_style = "text-align: center; font-weight: 900; font-size: 1.1em; margin-bottom:5px; padding-right: 2.5rem;"
+    unit_style = "text-align: center; font-weight: bold; font-size: 0.9em; color:#333; padding-right: 2.5rem;"
 
-    # 1. 세션 상태 초기화 (값이 없을 때만 초기값 설정 -> 오류 원인 차단)
+    # 1. 세션 상태 초기화
     if "my_partners_val" not in st.session_state: st.session_state["my_partners_val"] = 3
     if "duplication_val" not in st.session_state: st.session_state["duplication_val"] = 3
     if "generations_val" not in st.session_state: st.session_state["generations_val"] = 4
-        
+
+    # 2. 3단 컬럼 레이아웃
     c1, c2, c3 = st.columns(3)
-    with c1: my_partners = number_counter("1️⃣ 직대 파트너", "my_partners_val", 3, 1, 50, "명")
-    with c2: duplication = number_counter("2️⃣ 파트너당 복제", "duplication_val", 3, 1, 10, "명씩 소개")
-    with c3: generations = number_counter("3️⃣ 계산 깊이", "generations_val", 4, 1, 6, "세대(Level)")
+    
+    # 1️⃣ 직대 파트너
+    with c1:
+        st.markdown(f"<div style='{label_style}'>1️⃣ 직대 파트너</div>", unsafe_allow_html=True)
+        my_partners = st.number_input("직대 파트너", min_value=1, max_value=50, key="my_partners_val", label_visibility="collapsed")
+        st.markdown(f"<div style='{unit_style}'>명</div>", unsafe_allow_html=True)
+
+    # 2️⃣ 파트너당 복제
+    with c2:
+        st.markdown(f"<div style='{label_style}'>2️⃣ 파트너당 복제</div>", unsafe_allow_html=True)
+        duplication = st.number_input("파트너당 복제", min_value=1, max_value=10, key="duplication_val", label_visibility="collapsed")
+        st.markdown(f"<div style='{unit_style}'>명씩 소개</div>", unsafe_allow_html=True)
+
+    # 3️⃣ 계산 깊이
+    with c3:
+        st.markdown(f"<div style='{label_style}'>3️⃣ 계산 깊이</div>", unsafe_allow_html=True)
+        generations = st.number_input("계산 깊이", min_value=1, max_value=6, key="generations_val", label_visibility="collapsed")
+        st.markdown(f"<div style='{unit_style}'>세대(Level)</div>", unsafe_allow_html=True)
+        
     st.markdown("---")
     
     # ----------------------------------------------------------------------
-    # [수정된 부분] 가격 및 GV 설정 (오토십 + 액티바이즈)
+    # [기존 로직 유지] 140GV 기준 계산
     # ----------------------------------------------------------------------
-    # 가격 기준: 오토십(약 137,100원) + 액티바이즈(약 42,600원) = 179,700원
-    # 포인트 기준: 오토십(103GV) + 액티바이즈(37GV) = 140GV
-    
     UNIT_PRICE = 179700  # 1인당 월 평균 구매액
     UNIT_GV = 140        # 1인당 월 평균 포인트 (103 + 37)
     
     level_rates = [0.05, 0.03, 0.03, 0.03, 0.05, 0.05] # 레벨별 지급률
     
-    # 1. 직추천 보너스 (내가 직접 소개한 파트너 매출의 10%)
+    # 1. 직추천 보너스
     direct_income = (my_partners * UNIT_PRICE) * 0.10
     
     level_income = 0
@@ -73,21 +97,17 @@ def render_calculator_v2():
     partners_on_level = my_partners
     details_text = []
 
-    # 2. 레벨 보너스 계산 (복제)
+    # 2. 레벨 보너스 계산
     for i in range(generations):
-        # 파트너 수 계산
         current_partners = my_partners if i == 0 else partners_on_level * duplication
         partners_on_level = current_partners
         
-        # 매출 및 GV 계산
         current_sales = current_partners * UNIT_PRICE
         current_gv = current_partners * UNIT_GV
         
-        # 보너스 계산
         rate = level_rates[i] if i < len(level_rates) else 0.02
         current_bonus = current_sales * rate
         
-        # 누적
         total_partners += current_partners
         total_gv += current_gv
         level_income += current_bonus
@@ -96,7 +116,7 @@ def render_calculator_v2():
 
     total_income = direct_income + level_income
     
-    # 3. 직급 및 추가 보너스 산정
+    # 3. 직급 및 보너스 산정
     rank, car_bonus, travel, badge_color = "매니저", 0, "없음", "gray"
     
     if total_gv >= 100000: rank, car_bonus, travel, badge_color = "PT", 650000, "✈️ 월드 투어 풀패키지", "#FFD700"
