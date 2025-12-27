@@ -14,12 +14,10 @@ import view_guide
 import view_compensation
 import view_stories
 from utils import load_excel
-from config import * # config에서 API 키 가져오기
-
-warnings.filterwarnings("ignore")
+from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
-# [1] 기본 페이지 및 세션 설정 (가장 먼저 실행해야 함)
+# [1] 기본 페이지 및 세션 설정
 # --------------------------------------------------------------------------
 ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png"
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
@@ -31,7 +29,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# [수정 1] 세션 초기화를 맨 위로 올렸습니다. (메뉴바가 페이지를 알기 위해)
+# 세션 초기화 (메뉴바 동작을 위해 필수)
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
@@ -61,7 +59,6 @@ all_sheets = load_excel()
 # [3] 화면 구성 함수들
 # --------------------------------------------------------------------------
 def render_home_logo():
-    # 홈 화면일 때만 로고 표시
     if st.session_state.get("page", "홈") == "홈":
         logo_path = None
         if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
@@ -83,36 +80,30 @@ def render_home_logo():
             """, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# [4] ★ 핵심 수정: 상단 고정형 메뉴바 (인덱스 자동 추적) ★
+# [4] 상단 고정형 메뉴바 (인덱스 자동 추적 적용됨)
 # --------------------------------------------------------------------------
 def render_top_navigation():
-    # 메뉴 항목 정의
     menu_options = [
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
     ]
     
-    # 아이콘
     menu_icons = ["house", "robot", "calculator", "diagram-3", "cart", 
                   "shield-check", "activity", "heart-pulse", "people", "trophy", "file-earmark-pdf"]
 
-    # [수정 2] 현재 페이지가 메뉴의 몇 번째인지 찾습니다.
-    # 이렇게 해야 채팅을 쳐도 메뉴가 '홈'으로 돌아가지 않고 'AI상담'에 고정됩니다.
+    # 현재 페이지 위치 찾기
     current_page = st.session_state.get("page", "홈")
     try:
         current_index = menu_options.index(current_page)
     except ValueError:
         current_index = 0
 
-    # option_menu 생성
     selected = option_menu(
         menu_title=None, 
         options=menu_options,
         icons=menu_icons,
-        default_index=current_index,  # [중요] 0 대신 계산된 번호를 넣음
+        default_index=current_index, 
         orientation="horizontal",
-        
-        # [디자인 커스텀]
         styles={
             "container": {"padding": "0!important", "background-color": "#ffffff", "margin": "0"},
             "icon": {"color": "#666", "font-size": "14px"}, 
@@ -126,17 +117,16 @@ def render_top_navigation():
             "nav-link-selected": {"background-color": "#007bff", "color": "white"},
         }
     )
-    
     return selected
 
 # --------------------------------------------------------------------------
-# [5] 팝업창 및 AI 설정 (오류 수정됨)
+# [5] 팝업창 및 AI 설정 (★여기가 중요합니다★)
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
 
-# [수정 3] 모델 이름을 가장 확실한 정식 명칭으로 변경
-# gemini-flash-latest (X) -> gemini-1.5-flash (O)
-selected_model = "gemini-1.5-flash"
+# [수정 완료] 사장님 목록에 있는 최신 모델로 변경했습니다.
+# 1.5가 아니라 2.5를 써야 작동합니다.
+selected_model = "gemini-2.5-flash"
 
 if api_key:
     try:
@@ -158,24 +148,18 @@ def show_promo_window():
 # [6] 화면 렌더링 및 페이지 연결
 # --------------------------------------------------------------------------
 
-# 1. 로고 표시
 render_home_logo()
-
-# 2. 메뉴바 표시 (현재 페이지를 인식해서 그려짐)
 selected_page = render_top_navigation()
 
-# [수정 4] 메뉴를 클릭했을 때만 페이지 변경 로직 실행
 if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
-# 3. 팝업 로직 (홈 화면일 때만)
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
         show_promo_window()
         st.session_state["home_popup_shown"] = True
 
-# 4. 실제 페이지 내용 표시
 target_page = st.session_state.page
 
 if target_page == "홈": view_home.render_home_dashboard(all_sheets)
@@ -189,28 +173,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-# [버전 확인용 코드 - 확인 후 지우세요]
-import google.generativeai as genai
-st.warning(f"현재 설치된 AI 버전: {genai.__version__}")
-
-# [모델 목록 확인용 코드 - 확인 후 삭제]
-import google.generativeai as genai
-try:
-    genai.configure(api_key=api_key)
-    st.write("📋 사용 가능한 모델 목록:")
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            st.write(f"- {m.name}")
-except Exception as e:
-    st.error(f"목록 불러오기 실패: {e}")
-
-
-
-
-
-
-
-
-
-
