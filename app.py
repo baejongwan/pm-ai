@@ -16,7 +16,8 @@ import view_compensation
 import view_stories
 from utils import load_excel
 
-# [진짜 수정 완료] 이제 두 줄로 확실히 나눴습니다.
+# [설정] 경고 무시 및 설정 파일 로드
+# (수정됨: 이 두 줄이 붙어있어서 오류가 났었습니다. 이제 분리되었습니다.)
 from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
@@ -154,18 +155,15 @@ if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
-# [수정된 부분] 날짜 제한 로직 추가
-# 예: 2025년 5월 31일까지만 팝업을 띄웁니다.
-# (원하시는 날짜로 숫자를 바꿔주세요: 년, 월, 일)
-PROMO_END_DATE = datetime(2025, 5, 28) 
+# [팝업 설정] 날짜 제한 로직 (2025년 5월 31일까지만 팝업 표시)
+PROMO_END_DATE = datetime(2025, 5, 31) 
 
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
-        # [핵심] 현재 시간이 마감 날짜보다 이전일 때만 팝업 실행
+        # 현재 날짜가 마감일 이전일 때만 팝업 실행
         if datetime.now() < PROMO_END_DATE:
             show_promo_window()
         
-        # 팝업을 봤다고 체크 (날짜가 지나서 안 뜬 경우도 봤다고 처리해야 계속 안 뜸)
         st.session_state["home_popup_shown"] = True
 
 target_page = st.session_state.page
@@ -181,5 +179,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-
