@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import warnings
 import base64
+from datetime import datetime # [추가] 날짜 계산을 위해 필요합니다
 from streamlit_option_menu import option_menu 
 
 # --- 파일 임포트 ---
@@ -14,9 +15,10 @@ import view_guide
 import view_compensation
 import view_stories
 from utils import load_excel
-from config import * # config에서 API 키 가져오기
 
-warnings.filterwarnings("ignore")
+# [설정] 경고 무시 및 설정 파일 로드
+from config import * warnings.filterwarnings("ignore")
+
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
 # --------------------------------------------------------------------------
@@ -30,7 +32,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 세션 초기화 (가장 먼저 실행)
+# 세션 초기화
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
@@ -81,7 +83,7 @@ def render_home_logo():
             """, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# [4] 상단 고정형 메뉴바 (인덱스 자동 추적)
+# [4] 상단 고정형 메뉴바
 # --------------------------------------------------------------------------
 def render_top_navigation():
     menu_options = [
@@ -123,7 +125,7 @@ def render_top_navigation():
 # [5] 팝업창 및 AI 설정
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-selected_model = "gemini-2.5-flash" # [확인] 최신 모델 적용됨
+selected_model = "gemini-2.5-flash"
 
 if api_key:
     try:
@@ -134,7 +136,7 @@ if api_key:
 
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-@st.dialog("🎉 7주년 액티바이즈 프로모션 ** 12월 28일 오늘 마지막날 **", width="large")
+@st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
     st.caption("💡 창 밖의 어두운 부분을 클릭하거나, 오른쪽 위 X를 누르면 닫힙니다.")
@@ -152,9 +154,18 @@ if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
+# [수정된 부분] 날짜 제한 로직 추가
+# 예: 2025년 5월 31일까지만 팝업을 띄웁니다.
+# (원하시는 날짜로 숫자를 바꿔주세요: 년, 월, 일)
+PROMO_END_DATE = datetime(2025, 5, 28) 
+
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
-        show_promo_window()
+        # [핵심] 현재 시간이 마감 날짜보다 이전일 때만 팝업 실행
+        if datetime.now() < PROMO_END_DATE:
+            show_promo_window()
+        
+        # 팝업을 봤다고 체크 (날짜가 지나서 안 뜬 경우도 봤다고 처리해야 계속 안 뜸)
         st.session_state["home_popup_shown"] = True
 
 target_page = st.session_state.page
@@ -170,7 +181,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-
-
-
