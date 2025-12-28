@@ -135,7 +135,7 @@ if api_key:
 
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-@st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
+@st.dialog("🎉 7주년 액티바이즈 프로모션 ** 12월 28일 23시 59분까지 오늘 마지막날 **", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
     st.caption("💡 창 밖의 어두운 부분을 클릭하거나, 오른쪽 위 X를 누르면 닫힙니다.")
@@ -177,5 +177,6 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
 
