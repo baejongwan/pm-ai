@@ -5,19 +5,22 @@ import os
 # [핵심 수정] API 키 가져오기 (Render 오류 해결)
 # -----------------------------------------------------------
 def get_api_key():
-    # 1순위: Render 환경 변수 확인 (가장 먼저 체크!)
-    # Render 설정에서 넣은 GOOGLE_API_KEY가 여기서 잡힙니다.
+    # 1순위: Render 환경 변수 먼저 확인 (가장 중요!)
+    # Render 설정에서 입력한 GOOGLE_API_KEY를 여기서 가져옵니다.
+    # 이 코드가 먼저 실행되므로, 밑에 있는 st.secrets는 건드리지 않아 오류가 안 납니다.
     env_key = os.getenv("GOOGLE_API_KEY")
     if env_key:
         return env_key
 
     # 2순위: Streamlit Secrets 확인 (로컬 개발용)
-    # 파일이 없어도 오류가 나지 않도록 try-except로 감싸줍니다.
+    # 파일이 없어도 멈추지 않도록 try-except 안전장치를 씌웁니다.
     try:
         if "GOOGLE_API_KEY" in st.secrets:
             return st.secrets["GOOGLE_API_KEY"]
-    except Exception:
+    except FileNotFoundError:
         pass # 파일이 없으면 그냥 넘어감
+    except Exception:
+        pass 
 
     # 3순위: 아무것도 없으면 빈 값
     return ""
