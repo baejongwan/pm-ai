@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import warnings
 import base64
-from datetime import datetime # 날짜 계산용
+from datetime import datetime 
 from streamlit_option_menu import option_menu 
 
 # --- 파일 임포트 ---
@@ -15,9 +15,9 @@ import view_guide
 import view_compensation
 import view_stories
 from utils import load_excel
-
-from config import *
+from config import * # [수정 완료] 이제 두 줄로 나뉘어 있어 오류가 나지 않습니다.
 warnings.filterwarnings("ignore")
+
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
 # --------------------------------------------------------------------------
@@ -177,4 +177,3 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
