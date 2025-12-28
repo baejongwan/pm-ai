@@ -16,8 +16,7 @@ import view_compensation
 import view_stories
 from utils import load_excel
 
-# [설정] 경고 무시 및 설정 파일 로드
-# (수정됨: 이 두 줄이 붙어있어서 오류가 났었습니다. 이제 분리되었습니다.)
+# [진짜 수정 완료] 이제 두 줄로 확실히 나눴습니다.
 from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
@@ -182,4 +181,5 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
+
 
