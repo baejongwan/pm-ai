@@ -25,7 +25,7 @@ ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
 
 st.set_page_config(
-    page_title="PM AI PARTNER", 
+    page_title="PM 파트너스 허브", 
     page_icon=ICON_URL, 
     layout="wide", 
     initial_sidebar_state="collapsed"
@@ -154,7 +154,7 @@ if selected_page != st.session_state.page:
     st.rerun()
 
 # [팝업 설정] 날짜 제한 로직 (2025년 5월 31일까지만 팝업 표시)
-PROMO_END_DATE = datetime(2025, 12, 28) 
+PROMO_END_DATE = datetime(2025, 12, 29) 
 
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
@@ -177,9 +177,6 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-
-
 
 
 
