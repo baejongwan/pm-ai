@@ -18,7 +18,8 @@ import view_videos  # 영상 자료 페이지
 from utils import load_excel
 
 # [수정됨] 이 부분이 붙어있어서 오류가 났었습니다. 두 줄로 분리했습니다.
-from config import * warnings.filterwarnings("ignore")
+from config import * 
+warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -180,3 +181,4 @@ elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
 elif target_page == "영상자료": view_videos.render_video_page(all_sheets)
+
