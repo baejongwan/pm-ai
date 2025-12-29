@@ -101,55 +101,55 @@ def render_home_dashboard(all_sheets):
         </div>
     """, unsafe_allow_html=True)
 
-    # [3] 주요 서비스 바로가기
+    # [3] 주요 서비스 바로가기 (이미지 클릭 시 이동 기능 복구 완료)
     st.markdown('<div class="section-title">주요 서비스</div>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     
-    # [수정] 버튼 방식으로 변경 (확실한 이동을 위해)
+    # 1. AI 상담 (이미지 클릭 링크 복구)
     with col1:
         st.markdown("""
-            <div class="safety-card">
-                <div class="safety-img-box">
-                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="safety-img">
+            <a href="?page=AI상담" target="_self" class="card-link">
+                <div class="safety-card">
+                    <div class="safety-img-box">
+                        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="safety-img">
+                    </div>
+                    <div class="safety-title">AI 건강 상담</div>
                 </div>
-                <div class="safety-title">AI 건강 상담</div>
-            </div>
+            </a>
         """, unsafe_allow_html=True)
-        if st.button("AI상담 바로가기", key="btn_home_ai", use_container_width=True):
-            st.session_state.page = "AI상담"
-            st.rerun()
         
+    # 2. 수익 시뮬레이션 (이미지 클릭 링크 복구)
     with col2:
         st.markdown("""
-            <div class="safety-card">
-                <div class="safety-img-box">
-                    <img src="https://cdn-icons-png.flaticon.com/512/5501/5501360.png" class="safety-img">
+            <a href="?page=수익계산" target="_self" class="card-link">
+                <div class="safety-card">
+                    <div class="safety-img-box">
+                        <img src="https://cdn-icons-png.flaticon.com/512/5501/5501360.png" class="safety-img">
+                    </div>
+                    <div class="safety-title">수익 시뮬레이션</div>
                 </div>
-                <div class="safety-title">수익 시뮬레이션</div>
-            </div>
+            </a>
         """, unsafe_allow_html=True)
-        if st.button("수익계산 바로가기", key="btn_home_calc", use_container_width=True):
-            st.session_state.page = "수익계산"
-            st.rerun()
 
+    # 3. 액티바이즈 진단 (이미지 클릭 링크 복구)
     with col3:
         st.markdown("""
-            <div class="safety-card">
-                <div class="safety-img-box">
-                    <img src="https://cdn-icons-png.flaticon.com/512/8454/8454230.png" class="safety-img">
+            <a href="?page=액티증상" target="_self" class="card-link">
+                <div class="safety-card">
+                    <div class="safety-img-box">
+                        <img src="https://cdn-icons-png.flaticon.com/512/8454/8454230.png" class="safety-img">
+                    </div>
+                    <div class="safety-title">액티바이즈 진단</div>
                 </div>
-                <div class="safety-title">액티바이즈 진단</div>
-            </div>
+            </a>
         """, unsafe_allow_html=True)
-        if st.button("자가진단 바로가기", key="btn_home_acti", use_container_width=True):
-            st.session_state.page = "액티증상"
-            st.rerun()
 
 
     # ----------------------------------------------------------------------
-    # [4] ★ 오늘의 아침 조회 (수정됨: 버튼 이동 방식 적용) ★
+    # [4] ★ 오늘의 아침 조회 (버튼 기능 유지) ★
     # ----------------------------------------------------------------------
+    # 영상은 '더보기' 버튼을 눌러야 이동하는 것이 자연스러우므로 버튼 방식을 유지합니다.
     st.markdown('<div class="section-title">📺 오늘의 아침 조회</div>', unsafe_allow_html=True)
 
     if all_sheets and "아침방송" in all_sheets:
@@ -157,7 +157,6 @@ def render_home_dashboard(all_sheets):
         
         if not video_df.empty:
             try:
-                # 최신순 정렬
                 video_df = video_df.sort_values(by="날짜", ascending=False)
                 latest_video = video_df.iloc[0] 
                 
@@ -177,9 +176,8 @@ def render_home_dashboard(all_sheets):
                         st.write(f"**{v_title}**")
                         st.caption(f"📅 {v_date}")
                     with v_col2:
-                        # [핵심 수정] HTML 링크 대신 st.button 사용
-                        # 버튼을 누르면 page 상태를 바꾸고 새로고침(rerun)합니다.
-                        st.write("") # 줄맞춤용 여백
+                        st.write("") 
+                        # 여기는 아까 수정해드린 버튼 방식을 유지합니다 (잘 작동하니까요!)
                         if st.button("더보기 >", key="btn_more_videos"):
                             st.session_state.page = "영상자료"
                             st.rerun()
@@ -192,8 +190,7 @@ def render_home_dashboard(all_sheets):
         st.info("아직 '아침방송' 데이터가 없습니다.")
 
 
-    # [5] 제품 안전성 인증 (이미지 클릭은 HTML이라 이동이 안될 수 있어 텍스트 버튼으로 보완하지 않음 - 디자인 유지)
-    # 안전성 인증은 보통 정보 확인용이라 클릭 이동 빈도가 낮아 기존 유지합니다.
+    # [5] 제품 안전성 인증 (이미지 클릭 링크 복구)
     st.markdown('<div class="section-title">제품 안전성 인증</div>', unsafe_allow_html=True)
     
     target_safe = get_sheet_data(all_sheets, "안전성")
@@ -218,18 +215,17 @@ def render_home_dashboard(all_sheets):
                 if "home_logo" in img_src or not img_src:
                       img_src = "https://cdn-icons-png.flaticon.com/512/1156/1156743.png"
 
+                # 예전처럼 <a href> 태그를 사용하여 이미지를 클릭하면 이동하도록 수정
                 st.markdown(f"""
-                    <div class="safety-card">
-                        <div class="safety-img-box"><img src="{img_src}" class="safety-img"></div>
-                        <div class="safety-title">{item.get('인증제목', '인증마크')}</div>
-                    </div>
+                    <a href="?page=안전성" target="_self" class="card-link">
+                        <div class="safety-card">
+                            <div class="safety-img-box"><img src="{img_src}" class="safety-img"></div>
+                            <div class="safety-title">{item.get('인증제목', '인증마크')}</div>
+                        </div>
+                    </a>
                 """, unsafe_allow_html=True)
-                # 안전성 페이지 이동 버튼 (필요시 사용)
-                if st.button("확인", key=f"safe_btn_{i}", use_container_width=True):
-                    st.session_state.page = "안전성"
-                    st.rerun()
 
-    # [6] FitLine 인기 제품
+    # [6] FitLine 인기 제품 (이미지 클릭 링크 복구)
     st.markdown('<div class="section-title">FitLine 인기 제품</div>', unsafe_allow_html=True)
     
     target_prod = get_sheet_data(all_sheets, "제품설명")
@@ -239,17 +235,20 @@ def render_home_dashboard(all_sheets):
         for i, (idx, item) in enumerate(df.iterrows()):
             with p_cols[i % 2]:
                 img_src = get_optimized_image(item.get('이미지주소', ''))
+                # 예전처럼 <a href> 태그를 사용하여 이미지를 클릭하면 이동하도록 수정
                 st.markdown(f"""
-                    <div class="shop-item">
-                        <div class="shop-img-box"><img src="{img_src}" class="shop-img"></div>
-                        <div class="shop-info">
-                            <div class="shop-title">{item.get('제품명','-')}</div>
-                            <div class="shop-desc">{item.get('한줄소개','FitLine Premium')}</div>
+                    <a href="?page=제품구매" target="_self" class="card-link">
+                        <div class="shop-item">
+                            <div class="shop-img-box"><img src="{img_src}" class="shop-img"></div>
+                            <div class="shop-info">
+                                <div class="shop-title">{item.get('제품명','-')}</div>
+                                <div class="shop-desc">{item.get('한줄소개','FitLine Premium')}</div>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 """, unsafe_allow_html=True)
                 
-    # 제품 구매 페이지로 이동하는 전체 버튼
+    # 제품 전체보기 버튼 (이건 버튼이 편하실 것 같아 유지합니다)
     if st.button("제품 전체보기 >", use_container_width=True):
         st.session_state.page = "제품구매"
         st.rerun()
