@@ -17,8 +17,8 @@ import view_stories
 import view_videos  # 영상 자료 페이지
 from utils import load_excel
 
-# [수정됨] 이 부분이 붙어있어서 오류가 났었습니다. 두 줄로 분리했습니다.
-from config import * 
+# [설정] 경고 무시 및 설정 파일 로드
+from config import *
 warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
@@ -34,7 +34,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 세션 초기화
+# --------------------------------------------------------------------------
+# [핵심 수정] URL 쿼리 파라미터 감지 (이미지 클릭 이동 문제 해결!)
+# --------------------------------------------------------------------------
+# 1. 주소창에 ?page=OOO 가 있는지 확인합니다.
+query_params = st.query_params
+if "page" in query_params:
+    # URL에 이동할 페이지가 적혀있다면 그걸 세션에 저장합니다.
+    # 예: 이미지를 클릭해서 '?page=AI상담'으로 들어오면 바로 AI상담 페이지를 엽니다.
+    st.session_state.page = query_params["page"]
+
+# 2. 세션 초기화 (URL 파라미터도 없고, 세션도 비어있을 때만 '홈'으로 설정)
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
@@ -101,6 +111,7 @@ def render_top_navigation():
     try:
         current_index = menu_options.index(current_page)
     except ValueError:
+        # URL로 들어온 페이지 이름이 메뉴 목록에 없다면(예타 오타 등) 기본값 0(홈)으로 설정
         current_index = 0
 
     selected = option_menu(
@@ -153,6 +164,7 @@ def show_promo_window():
 render_home_logo()
 selected_page = render_top_navigation()
 
+# 메뉴를 직접 클릭했을 때의 이동 처리
 if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
@@ -181,4 +193,3 @@ elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
 elif target_page == "영상자료": view_videos.render_video_page(all_sheets)
-
