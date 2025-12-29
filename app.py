@@ -169,7 +169,7 @@ if selected_page != st.session_state.page:
     st.rerun()
 
 # [팝업 설정] 날짜 제한 로직 (2025년 12월 29일까지)
-PROMO_END_DATE = datetime(2026, 01, 10) 
+PROMO_END_DATE = datetime(2026, 1, 10) 
 
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
@@ -192,5 +192,6 @@ elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
 elif target_page == "영상자료": view_videos.render_video_page(all_sheets)
+
 
 
