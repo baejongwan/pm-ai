@@ -147,9 +147,9 @@ if api_key:
     except Exception as e:
         pass
 
-EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
+EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.png"
 
-@st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
+@st.dialog("🎉 2026년 01월 이벤트 일정", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
     st.caption("💡 창 밖의 어두운 부분을 클릭하거나, 오른쪽 위 X를 누르면 닫힙니다.")
@@ -169,7 +169,7 @@ if selected_page != st.session_state.page:
     st.rerun()
 
 # [팝업 설정] 날짜 제한 로직 (2025년 12월 29일까지)
-PROMO_END_DATE = datetime(2025, 12, 29) 
+PROMO_END_DATE = datetime(2026, 01, 10) 
 
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
@@ -192,4 +192,5 @@ elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
 elif target_page == "영상자료": view_videos.render_video_page(all_sheets)
+
 
