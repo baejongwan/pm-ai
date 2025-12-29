@@ -14,8 +14,10 @@ import view_pdf
 import view_guide
 import view_compensation
 import view_stories
-import view_videos  # [추가됨] 새로 만든 영상 파일 가져오기
+import view_videos  # 영상 자료 페이지
 from utils import load_excel
+
+# [수정됨] 이 부분이 붙어있어서 오류가 났었습니다. 두 줄로 분리했습니다.
 from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
@@ -85,13 +87,12 @@ def render_home_logo():
 # [4] 상단 고정형 메뉴바
 # --------------------------------------------------------------------------
 def render_top_navigation():
-    # [수정됨] 메뉴에 "영상자료" 추가
+    # 메뉴에 "영상자료"가 포함되어 있습니다.
     menu_options = [
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "영상자료", "자료실"
     ]
     
-    # [수정됨] 아이콘 추가 (collection-play가 재생 버튼 모양)
     menu_icons = ["house", "robot", "calculator", "diagram-3", "cart", 
                   "shield-check", "activity", "heart-pulse", "people", "trophy", "collection-play", "file-earmark-pdf"]
 
@@ -178,4 +179,4 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-elif target_page == "영상자료": view_videos.render_video_page(all_sheets) # [추가됨] 연결 완료!
+elif target_page == "영상자료": view_videos.render_video_page(all_sheets)
