@@ -14,12 +14,11 @@ import view_pdf
 import view_guide
 import view_compensation
 import view_stories
-import view_videos  # 영상 자료 페이지
+import view_videos
 from utils import load_excel
 
 # [설정] 경고 무시 및 설정 파일 로드
-from config import *
-warnings.filterwarnings("ignore")
+from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -35,16 +34,17 @@ st.set_page_config(
 )
 
 # --------------------------------------------------------------------------
-# [핵심 수정] URL 쿼리 파라미터 감지 (이미지 클릭 이동 문제 해결!)
+# [핵심 수정] URL 쿼리 파라미터 처리 (메뉴바 먹통 해결)
 # --------------------------------------------------------------------------
-# 1. 주소창에 ?page=OOO 가 있는지 확인합니다.
-query_params = st.query_params
-if "page" in query_params:
-    # URL에 이동할 페이지가 적혀있다면 그걸 세션에 저장합니다.
-    # 예: 이미지를 클릭해서 '?page=AI상담'으로 들어오면 바로 AI상담 페이지를 엽니다.
-    st.session_state.page = query_params["page"]
+# 1. 주소창에 ?page=OOO 명령이 있는지 확인
+if "page" in st.query_params:
+    # 2. 해당 페이지로 이동 설정
+    st.session_state.page = st.query_params["page"]
+    # 3. [중요] 명령을 접수했으면 주소창을 깨끗이 비웁니다.
+    # 이걸 안 하면 메뉴바를 눌러도 계속 다시 여기로 돌아오게 됩니다.
+    st.query_params.clear()
 
-# 2. 세션 초기화 (URL 파라미터도 없고, 세션도 비어있을 때만 '홈'으로 설정)
+# 4. 세션이 비어있으면 기본값 '홈'
 if "page" not in st.session_state:
     st.session_state.page = "홈"
 
@@ -98,7 +98,6 @@ def render_home_logo():
 # [4] 상단 고정형 메뉴바
 # --------------------------------------------------------------------------
 def render_top_navigation():
-    # 메뉴에 "영상자료"가 포함되어 있습니다.
     menu_options = [
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
         "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "영상자료", "자료실"
@@ -111,7 +110,6 @@ def render_top_navigation():
     try:
         current_index = menu_options.index(current_page)
     except ValueError:
-        # URL로 들어온 페이지 이름이 메뉴 목록에 없다면(예타 오타 등) 기본값 0(홈)으로 설정
         current_index = 0
 
     selected = option_menu(
@@ -164,7 +162,7 @@ def show_promo_window():
 render_home_logo()
 selected_page = render_top_navigation()
 
-# 메뉴를 직접 클릭했을 때의 이동 처리
+# 메뉴바 클릭 시 페이지 이동 처리
 if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
