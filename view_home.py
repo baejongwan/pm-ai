@@ -1,17 +1,17 @@
 import streamlit as st
 import random
 import os
-import pandas as pd # 데이터 확인용 추가
+import pandas as pd 
 from utils import get_optimized_image
 from func import get_sheet_data, get_daily_visitor_count 
 from config import FAMILY_IDS 
 
 # --------------------------------------------------------------------------
-# [1] 관리자용 로그 확인 함수 (비밀번호 보호 기능 추가됨)
+# [1] 관리자용 로그 확인 함수
 # --------------------------------------------------------------------------
 def render_admin_logs():
     import pandas as pd
-    from func import get_google_sheet_connection # func에서 연결 함수 가져오기
+    from func import get_google_sheet_connection 
 
     st.markdown("---")
     with st.expander("🔐 관리자 전용: AI 상담 이력 보기 (구글 연동)"):
@@ -22,23 +22,19 @@ def render_admin_logs():
             st.success("✅ 관리자 인증 완료! (구글 시트 로딩 중...)")
             
             try:
-                # 1. 구글 시트 연결 및 데이터 가져오기
                 client = get_google_sheet_connection()
                 if client:
                     sheet = client.open("PM_AI_상담이력").sheet1
-                    data = sheet.get_all_records() # 모든 데이터 가져오기
+                    data = sheet.get_all_records() 
                     
                     if data:
                         df = pd.DataFrame(data)
-                        
-                        # 최신순 정렬
                         if "날짜시간" in df.columns:
                             df = df.sort_values(by="날짜시간", ascending=False)
                             
                         st.write(f"📊 총 **{len(df)}건**의 영구 저장된 기록이 있습니다.")
                         st.dataframe(df, use_container_width=True)
                         
-                        # 다운로드 버튼
                         csv_data = df.to_csv(index=False).encode('utf-8-sig')
                         st.download_button(
                             label="📥 엑셀 파일로 다운로드",
@@ -62,7 +58,7 @@ def render_admin_logs():
 # --------------------------------------------------------------------------
 def render_home_dashboard(all_sheets):
     
-    # [0] 방문자 수 (중복 증가 방지 로직 적용)
+    # [0] 방문자 수
     if "cached_visitor_count" not in st.session_state:
         st.session_state.cached_visitor_count = get_daily_visitor_count()
         
@@ -110,48 +106,49 @@ def render_home_dashboard(all_sheets):
     
     col1, col2, col3 = st.columns(3)
     
-    # 1. AI 상담
+    # [수정] 버튼 방식으로 변경 (확실한 이동을 위해)
     with col1:
         st.markdown("""
-            <a href="?page=AI상담" target="_self" class="card-link">
-                <div class="safety-card">
-                    <div class="safety-img-box">
-                        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="safety-img">
-                    </div>
-                    <div class="safety-title">AI 건강 상담</div>
+            <div class="safety-card">
+                <div class="safety-img-box">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="safety-img">
                 </div>
-            </a>
+                <div class="safety-title">AI 건강 상담</div>
+            </div>
         """, unsafe_allow_html=True)
+        if st.button("AI상담 바로가기", key="btn_home_ai", use_container_width=True):
+            st.session_state.page = "AI상담"
+            st.rerun()
         
-    # 2. 수익 시뮬레이션
     with col2:
         st.markdown("""
-            <a href="?page=수익계산" target="_self" class="card-link">
-                <div class="safety-card">
-                    <div class="safety-img-box">
-                        <img src="https://cdn-icons-png.flaticon.com/512/5501/5501360.png" class="safety-img">
-                    </div>
-                    <div class="safety-title">수익 시뮬레이션</div>
+            <div class="safety-card">
+                <div class="safety-img-box">
+                    <img src="https://cdn-icons-png.flaticon.com/512/5501/5501360.png" class="safety-img">
                 </div>
-            </a>
+                <div class="safety-title">수익 시뮬레이션</div>
+            </div>
         """, unsafe_allow_html=True)
+        if st.button("수익계산 바로가기", key="btn_home_calc", use_container_width=True):
+            st.session_state.page = "수익계산"
+            st.rerun()
 
-    # 3. 액티바이즈 진단
     with col3:
         st.markdown("""
-            <a href="?page=액티증상" target="_self" class="card-link">
-                <div class="safety-card">
-                    <div class="safety-img-box">
-                        <img src="https://cdn-icons-png.flaticon.com/512/8454/8454230.png" class="safety-img">
-                    </div>
-                    <div class="safety-title">액티바이즈 진단</div>
+            <div class="safety-card">
+                <div class="safety-img-box">
+                    <img src="https://cdn-icons-png.flaticon.com/512/8454/8454230.png" class="safety-img">
                 </div>
-            </a>
+                <div class="safety-title">액티바이즈 진단</div>
+            </div>
         """, unsafe_allow_html=True)
+        if st.button("자가진단 바로가기", key="btn_home_acti", use_container_width=True):
+            st.session_state.page = "액티증상"
+            st.rerun()
 
 
     # ----------------------------------------------------------------------
-    # [추가됨] ★ 오늘의 아침 조회 (영상 섹션) ★
+    # [4] ★ 오늘의 아침 조회 (수정됨: 버튼 이동 방식 적용) ★
     # ----------------------------------------------------------------------
     st.markdown('<div class="section-title">📺 오늘의 아침 조회</div>', unsafe_allow_html=True)
 
@@ -160,16 +157,14 @@ def render_home_dashboard(all_sheets):
         
         if not video_df.empty:
             try:
-                # 1. 날짜 기준 내림차순 정렬 (최신순)
-                # 날짜 형식이 엑셀에서 텍스트일 수도, 날짜일 수도 있어 문자열로 변환 후 정렬 시도
+                # 최신순 정렬
                 video_df = video_df.sort_values(by="날짜", ascending=False)
-                latest_video = video_df.iloc[0] # 가장 첫 번째(최신) 영상 가져오기
+                latest_video = video_df.iloc[0] 
                 
                 v_link = str(latest_video.get("링크", "")).strip()
                 v_title = latest_video.get("설명", "제목 없음")
                 v_date = latest_video.get("날짜", "")
 
-                # 2. 영상 카드 디자인
                 with st.container(border=True):
                     if "http" in v_link:
                         st.video(v_link)
@@ -182,21 +177,13 @@ def render_home_dashboard(all_sheets):
                         st.write(f"**{v_title}**")
                         st.caption(f"📅 {v_date}")
                     with v_col2:
-                        # 더보기 버튼 (영상자료 페이지로 이동)
-                        st.markdown("""
-                            <div style="text-align:right; padding-top:10px;">
-                                <a href="?page=영상자료" target="_self" style="
-                                    background-color:#f0f2f6; 
-                                    padding:6px 12px; 
-                                    border-radius:15px; 
-                                    text-decoration:none; 
-                                    color:#333; 
-                                    font-size:12px;
-                                    font-weight:bold;">
-                                    더보기 >
-                                </a>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # [핵심 수정] HTML 링크 대신 st.button 사용
+                        # 버튼을 누르면 page 상태를 바꾸고 새로고침(rerun)합니다.
+                        st.write("") # 줄맞춤용 여백
+                        if st.button("더보기 >", key="btn_more_videos"):
+                            st.session_state.page = "영상자료"
+                            st.rerun()
+                            
             except Exception as e:
                 st.error("영상 정보를 불러오는 중 오류가 발생했습니다.")
         else:
@@ -205,7 +192,8 @@ def render_home_dashboard(all_sheets):
         st.info("아직 '아침방송' 데이터가 없습니다.")
 
 
-    # [4] 제품 안전성 인증
+    # [5] 제품 안전성 인증 (이미지 클릭은 HTML이라 이동이 안될 수 있어 텍스트 버튼으로 보완하지 않음 - 디자인 유지)
+    # 안전성 인증은 보통 정보 확인용이라 클릭 이동 빈도가 낮아 기존 유지합니다.
     st.markdown('<div class="section-title">제품 안전성 인증</div>', unsafe_allow_html=True)
     
     target_safe = get_sheet_data(all_sheets, "안전성")
@@ -231,15 +219,17 @@ def render_home_dashboard(all_sheets):
                       img_src = "https://cdn-icons-png.flaticon.com/512/1156/1156743.png"
 
                 st.markdown(f"""
-                    <a href="?page=안전성" target="_self" class="card-link">
-                        <div class="safety-card">
-                            <div class="safety-img-box"><img src="{img_src}" class="safety-img"></div>
-                            <div class="safety-title">{item.get('인증제목', '인증마크')}</div>
-                        </div>
-                    </a>
+                    <div class="safety-card">
+                        <div class="safety-img-box"><img src="{img_src}" class="safety-img"></div>
+                        <div class="safety-title">{item.get('인증제목', '인증마크')}</div>
+                    </div>
                 """, unsafe_allow_html=True)
+                # 안전성 페이지 이동 버튼 (필요시 사용)
+                if st.button("확인", key=f"safe_btn_{i}", use_container_width=True):
+                    st.session_state.page = "안전성"
+                    st.rerun()
 
-    # [5] FitLine 인기 제품
+    # [6] FitLine 인기 제품
     st.markdown('<div class="section-title">FitLine 인기 제품</div>', unsafe_allow_html=True)
     
     target_prod = get_sheet_data(all_sheets, "제품설명")
@@ -250,18 +240,21 @@ def render_home_dashboard(all_sheets):
             with p_cols[i % 2]:
                 img_src = get_optimized_image(item.get('이미지주소', ''))
                 st.markdown(f"""
-                    <a href="?page=제품구매" target="_self" class="card-link">
-                        <div class="shop-item">
-                            <div class="shop-img-box"><img src="{img_src}" class="shop-img"></div>
-                            <div class="shop-info">
-                                <div class="shop-title">{item.get('제품명','-')}</div>
-                                <div class="shop-desc">{item.get('한줄소개','FitLine Premium')}</div>
-                            </div>
+                    <div class="shop-item">
+                        <div class="shop-img-box"><img src="{img_src}" class="shop-img"></div>
+                        <div class="shop-info">
+                            <div class="shop-title">{item.get('제품명','-')}</div>
+                            <div class="shop-desc">{item.get('한줄소개','FitLine Premium')}</div>
                         </div>
-                    </a>
+                    </div>
                 """, unsafe_allow_html=True)
+                
+    # 제품 구매 페이지로 이동하는 전체 버튼
+    if st.button("제품 전체보기 >", use_container_width=True):
+        st.session_state.page = "제품구매"
+        st.rerun()
             
-    # [6] 고객서비스
+    # [7] 고객서비스
     st.markdown('<div class="section-title">고객 서비스</div>', unsafe_allow_html=True)
     st.markdown("""
         <div class="cs-box">
@@ -280,5 +273,5 @@ def render_home_dashboard(all_sheets):
         </div>
     """, unsafe_allow_html=True)
 
-    # [7] 관리자 로그 확인 기능 실행
+    # [8] 관리자 로그 확인 기능 실행
     render_admin_logs()
