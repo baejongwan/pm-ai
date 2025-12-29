@@ -63,9 +63,6 @@ def render_admin_logs():
 def render_home_dashboard(all_sheets):
     
     # [0] 방문자 수 (중복 증가 방지 로직 적용)
-    # 앱이 실행되는 동안 'cached_visitor_count'라는 이름으로 방문자 수를 기억해둡니다.
-    # 만약 기억해둔게 없으면(첫 접속) 함수를 실행해서 카운트를 1 올리고 기억합니다.
-    # 기억해둔게 있으면(메뉴 이동 후 복귀) 함수를 실행하지 않고 기억된 숫자만 보여줍니다.
     if "cached_visitor_count" not in st.session_state:
         st.session_state.cached_visitor_count = get_daily_visitor_count()
         
@@ -151,6 +148,61 @@ def render_home_dashboard(all_sheets):
                 </div>
             </a>
         """, unsafe_allow_html=True)
+
+
+    # ----------------------------------------------------------------------
+    # [추가됨] ★ 오늘의 아침 조회 (영상 섹션) ★
+    # ----------------------------------------------------------------------
+    st.markdown('<div class="section-title">📺 오늘의 아침 조회</div>', unsafe_allow_html=True)
+
+    if all_sheets and "아침방송" in all_sheets:
+        video_df = all_sheets["아침방송"]
+        
+        if not video_df.empty:
+            try:
+                # 1. 날짜 기준 내림차순 정렬 (최신순)
+                # 날짜 형식이 엑셀에서 텍스트일 수도, 날짜일 수도 있어 문자열로 변환 후 정렬 시도
+                video_df = video_df.sort_values(by="날짜", ascending=False)
+                latest_video = video_df.iloc[0] # 가장 첫 번째(최신) 영상 가져오기
+                
+                v_link = str(latest_video.get("링크", "")).strip()
+                v_title = latest_video.get("설명", "제목 없음")
+                v_date = latest_video.get("날짜", "")
+
+                # 2. 영상 카드 디자인
+                with st.container(border=True):
+                    if "http" in v_link:
+                        st.video(v_link)
+                    else:
+                        st.error("영상 링크가 올바르지 않습니다.")
+                    
+                    # 제목과 더보기 버튼
+                    v_col1, v_col2 = st.columns([3, 1])
+                    with v_col1:
+                        st.write(f"**{v_title}**")
+                        st.caption(f"📅 {v_date}")
+                    with v_col2:
+                        # 더보기 버튼 (영상자료 페이지로 이동)
+                        st.markdown("""
+                            <div style="text-align:right; padding-top:10px;">
+                                <a href="?page=영상자료" target="_self" style="
+                                    background-color:#f0f2f6; 
+                                    padding:6px 12px; 
+                                    border-radius:15px; 
+                                    text-decoration:none; 
+                                    color:#333; 
+                                    font-size:12px;
+                                    font-weight:bold;">
+                                    더보기 >
+                                </a>
+                            </div>
+                        """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error("영상 정보를 불러오는 중 오류가 발생했습니다.")
+        else:
+            st.info("등록된 최신 영상이 없습니다.")
+    else:
+        st.info("아직 '아침방송' 데이터가 없습니다.")
 
 
     # [4] 제품 안전성 인증
