@@ -14,9 +14,9 @@ import view_pdf
 import view_guide
 import view_compensation
 import view_stories
+import view_videos  # [추가됨] 새로 만든 영상 파일 가져오기
 from utils import load_excel
-from config import * # [수정 완료] 이제 두 줄로 나뉘어 있어 오류가 나지 않습니다.
-warnings.filterwarnings("ignore")
+from config import * warnings.filterwarnings("ignore")
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -25,7 +25,7 @@ ICON_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/app_icon.png
 MANIFEST_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/manifest.json"
 
 st.set_page_config(
-    page_title="PM AI PATNER", 
+    page_title="PM 파트너스 허브", 
     page_icon=ICON_URL, 
     layout="wide", 
     initial_sidebar_state="collapsed"
@@ -85,13 +85,15 @@ def render_home_logo():
 # [4] 상단 고정형 메뉴바
 # --------------------------------------------------------------------------
 def render_top_navigation():
+    # [수정됨] 메뉴에 "영상자료" 추가
     menu_options = [
         "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
-        "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "자료실"
+        "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "영상자료", "자료실"
     ]
     
+    # [수정됨] 아이콘 추가 (collection-play가 재생 버튼 모양)
     menu_icons = ["house", "robot", "calculator", "diagram-3", "cart", 
-                  "shield-check", "activity", "heart-pulse", "people", "trophy", "file-earmark-pdf"]
+                  "shield-check", "activity", "heart-pulse", "people", "trophy", "collection-play", "file-earmark-pdf"]
 
     current_page = st.session_state.get("page", "홈")
     try:
@@ -135,7 +137,7 @@ if api_key:
 
 EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.jpg"
 
-@st.dialog("🎉 7주년 액티바이즈 프로모션 ** 12월 28일 23시 59분까지 오늘 마지막날 **", width="large")
+@st.dialog("🎉 7주년 액티바이즈 프로모션", width="large")
 def show_promo_window():
     st.image(EVENT_IMAGE_URL)
     st.caption("💡 창 밖의 어두운 부분을 클릭하거나, 오른쪽 위 X를 누르면 닫힙니다.")
@@ -153,12 +155,11 @@ if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
-# [팝업 설정] 날짜 제한 로직 (2025년 5월 31일까지만 팝업 표시)
-PROMO_END_DATE = datetime(2025, 12, 28) 
+# [팝업 설정] 날짜 제한 로직 (2025년 12월 29일까지)
+PROMO_END_DATE = datetime(2025, 12, 29) 
 
 if "home_popup_shown" not in st.session_state:
     if st.session_state.page == "홈":
-        # 현재 날짜가 마감일 이전일 때만 팝업 실행
         if datetime.now() < PROMO_END_DATE:
             show_promo_window()
         
@@ -177,8 +178,4 @@ elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
 elif target_page == "호전반응": view_guide.render_guide(all_sheets)
 elif target_page == "체험사례": view_stories.render_experience(all_sheets)
 elif target_page == "성공사례": view_stories.render_success(all_sheets)
-
-
-
-
-
+elif target_page == "영상자료": view_videos.render_video_page(all_sheets) # [추가됨] 연결 완료!
