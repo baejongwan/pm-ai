@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
-
+from config import LANG_CONFIG
 def render_video_page(all_sheets):
-    st.title("📺 PM 영상 자료실")
-    st.caption("매일 아침 조회 및 주요 교육 영상을 확인하세요.")
+    lang_code = st.session_state.get("selected_lang", "KR")
+    ui = LANG_CONFIG[lang_code]["ui"]
+    
+    st.title(f"📺 {ui['video_title']}")
+    st.caption(ui['video_sub'])
     st.divider()
 
     # 1. 엑셀에서 '아침방송' 시트 데이터 가져오기

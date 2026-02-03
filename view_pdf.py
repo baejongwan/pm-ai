@@ -1,22 +1,30 @@
 import streamlit as st
 import os
 import base64
-# func 임포트 제거됨 (render_return_home_button 안씀)
+from config import LANG_CONFIG
 
 def render_pdf_viewer(file_name):
-    # 홈 버튼 제거됨
-    st.markdown("<h2 style='text-align:center;'>📄 BA 자료실</h2>", unsafe_allow_html=True)
+    # 1. 언어 설정 가져오기
+    lang_code = st.session_state.get("selected_lang", "KR")
+    ui = LANG_CONFIG[lang_code]["ui"]
+    
+    # 2. [오류 해결] ui에 'pdf_title'이 없을 경우를 대비한 안전 장치
+    # 만약 config.py에 'pdf_title'이 없으면 기본값 "BA 자료실"을 사용합니다.
+    page_title = ui.get('pdf_title', "📄 BA 자료실")
+    download_label = ui.get('pdf_download', "📥 PDF 파일 다운로드 받기")
+    
+    st.markdown(f"<h2 style='text-align:center;'>{page_title}</h2>", unsafe_allow_html=True)
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, file_name)
 
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
-            base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+            pdf_data = f.read()
             
         st.download_button(
-            label="📥 PDF 파일 다운로드 받기",
-            data=base64.b64decode(base64_pdf),
+            label=download_label,
+            data=pdf_data,
             file_name=file_name,
             mime="application/pdf",
             use_container_width=True
@@ -25,6 +33,7 @@ def render_pdf_viewer(file_name):
         st.write("") 
         st.markdown("---")
         
+        # PDF 미리보기 (이미지 변환 출력)
         try:
             import fitz  # pymupdf
             doc = fitz.open(file_path)
@@ -33,11 +42,10 @@ def render_pdf_viewer(file_name):
                 st.image(pix.tobytes(), use_container_width=True)
                 
         except ImportError:
-             st.error("pymupdf 라이브러리가 필요합니다.")
+            st.warning("PDF 미리보기를 위해 'pymupdf' 라이브러리가 필요합니다.")
         except Exception as e:
-            st.error("뷰어 로딩 중 오류가 발생했습니다.")
-            st.warning("모바일에서 화면이 보이지 않는다면 위 [다운로드] 버튼을 이용해주세요.")
-
+            st.error(f"미리보기를 불러오는 중 오류가 발생했습니다: {e}")
+            
     else:
-        st.error(f"🚨 파일을 찾을 수 없습니다: {file_name}")
-        st.info(f"💡 팁: '{file_name}' 파일을 app.py 파일이 있는 폴더에 넣어주세요.")
+        no_file_msg = "파일을 찾을 수 없습니다." if lang_code == "KR" else "File not found."
+        st.error(f"🚨 {file_name} {no_file_msg}")

@@ -20,6 +20,7 @@ from utils import load_excel
 # [설정] 경고 무시 및 설정 파일 로드
 from config import *
 warnings.filterwarnings("ignore")
+from config import LANG_CONFIG
 
 # --------------------------------------------------------------------------
 # [1] 기본 페이지 및 세션 설정
@@ -35,79 +36,89 @@ st.set_page_config(
 )
 
 # --------------------------------------------------------------------------
-# [핵심 수정] URL 쿼리 파라미터 처리 (메뉴바 먹통 해결)
+# [핵심 수정] 1단계: 언어 선택 화면 (로고 + Welcome 문구 추가)
 # --------------------------------------------------------------------------
-# 1. 주소창에 ?page=OOO 명령이 있는지 확인
+if "selected_lang" not in st.session_state:
+    st.session_state.selected_lang = None
+
+if st.session_state.selected_lang is None:
+    # 1. 로고 출력 (home_logo.png)
+    logo_path = "home_logo.png"
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            img_b64 = base64.b64encode(f.read()).decode()
+        st.markdown(f"""
+            <div style="display: flex; justify-content: center; padding-top: 50px;">
+                <img src="data:image/png;base64,{img_b64}" style="width: 180px; object-fit: contain;">
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # 2. 환영 문구
+    st.markdown("<h1 style='text-align:center; color:#003057; margin-top:20px;'>Welcome</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#666;'>Please select your language / 언어를 선택해주세요</p>", unsafe_allow_html=True)
+    
+    # 3. 언어 선택 버튼
+    st.write("")
+    lang_cols = st.columns(4)
+    for i, (code, info) in enumerate(LANG_CONFIG.items()):
+        with lang_cols[i]:
+            if st.button(info["name"], key=f"lang_{code}", use_container_width=True):
+                st.session_state.selected_lang = code
+                st.rerun()
+    st.stop()
+
+# --------------------------------------------------------------------------
+# [핵심 수정] 2단계: 선택된 언어 데이터 및 다국어 텍스트 로드
+# --------------------------------------------------------------------------
+lang_code = st.session_state.selected_lang
+lang_info = LANG_CONFIG[lang_code]
+all_sheets = load_excel(lang_info["file"]) # 언어별 엑셀 파일 로드
+menu_options = lang_info["menu"]           # 해당 언어의 메뉴 리스트
+
+# --------------------------------------------------------------------------
+# [2] URL 쿼리 파라미터 및 세션 페이지 관리
+# --------------------------------------------------------------------------
 if "page" in st.query_params:
-    # 2. 해당 페이지로 이동 설정
     st.session_state.page = st.query_params["page"]
-    # 3. [중요] 명령을 접수했으면 주소창을 깨끗이 비웁니다.
-    # 이걸 안 하면 메뉴바를 눌러도 계속 다시 여기로 돌아오게 됩니다.
     st.query_params.clear()
 
-# 4. 세션이 비어있으면 기본값 '홈'
 if "page" not in st.session_state:
-    st.session_state.page = "홈"
+    st.session_state.page = menu_options[0]
 
 # 아이콘 및 메타태그
 if "head_set" not in st.session_state:
-    st.markdown(
-        f"""
+    st.markdown(f"""
         <link rel="manifest" href="{MANIFEST_URL}">
         <link rel="apple-touch-icon" href="{ICON_URL}">
-        <link rel="apple-touch-icon" sizes="180x180" href="{ICON_URL}">
-        <link rel="shortcut icon" href="{ICON_URL}">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <meta name="apple-mobile-web-app-title" content="PM Hub">
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
     st.session_state.head_set = True
 
-# --------------------------------------------------------------------------
-# [2] 스타일 및 데이터 로딩
-# --------------------------------------------------------------------------
 styles.apply_custom_css()
-all_sheets = load_excel()
 
 # --------------------------------------------------------------------------
-# [3] 화면 구성 함수들
+# [3] 화면 구성 함수 (로고 렌더링)
 # --------------------------------------------------------------------------
 def render_home_logo():
-    if st.session_state.get("page", "홈") == "홈":
-        logo_path = None
-        if os.path.exists("home_logo.png"): logo_path = "home_logo.png"
-        elif os.path.exists("PMAILOGO.png"): logo_path = "PMAILOGO.png"
-        
-        if logo_path:
+    if st.session_state.get("page") == menu_options[0]:
+        logo_path = "PMAILOGO.png" if os.path.exists("PMAILOGO.png") else "home_logo.png"
+        if os.path.exists(logo_path):
             with open(logo_path, "rb") as f:
                 img_b64 = base64.b64encode(f.read()).decode()
             st.markdown(f"""
-                <div style="display: flex; justify-content: center; padding-top: 10px; padding-bottom: 0px;">
+                <div style="display: flex; justify-content: center; padding-top: 10px;">
                     <img src="data:image/png;base64,{img_b64}" style="width: 120px; object-fit: contain;">
                 </div>
             """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-                <h3 style='text-align:center; color:#003057; margin-top:10px; margin-bottom:5px;'>
-                    PM Partners
-                </h3>
-            """, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# [4] 상단 고정형 메뉴바
+# [4] 상단 다국어 메뉴바
 # --------------------------------------------------------------------------
 def render_top_navigation():
-    menu_options = [
-        "홈", "AI상담", "수익계산", "보상플랜", "제품구매",
-        "안전성", "액티증상", "호전반응", "체험사례", "성공사례", "영상자료", "자료실"
-    ]
-    
     menu_icons = ["house", "robot", "calculator", "diagram-3", "cart", 
                   "shield-check", "activity", "heart-pulse", "people", "trophy", "collection-play", "file-earmark-pdf"]
 
-    current_page = st.session_state.get("page", "홈")
+    current_page = st.session_state.get("page", menu_options[0])
     try:
         current_index = menu_options.index(current_page)
     except ValueError:
@@ -121,78 +132,37 @@ def render_top_navigation():
         orientation="horizontal",
         styles={
             "container": {"padding": "0!important", "background-color": "#ffffff", "margin": "0"},
-            "icon": {"color": "#666", "font-size": "14px"}, 
-            "nav-link": {
-                "font-size": "14px", 
-                "text-align": "center", 
-                "margin": "0px", 
-                "color": "#444",
-                "white-space": "nowrap",
-            },
+            "nav-link": {"font-size": "13px", "text-align": "center", "color": "#444", "white-space": "nowrap", "padding": "10px 5px"},
             "nav-link-selected": {"background-color": "#007bff", "color": "white"},
         }
     )
     return selected
 
 # --------------------------------------------------------------------------
-# [5] 팝업창 및 AI 설정
+# [5] 화면 렌더링 및 페이지 라우팅
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-selected_model = "gemini-2.5-flash"
-
-if api_key:
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-    except Exception as e:
-        pass
-
-EVENT_IMAGE_URL = "https://raw.githubusercontent.com/baejongwan/pm-ai/main/event_01.png"
-
-@st.dialog("🎉 2026년 01월 이벤트 일정", width="large")
-def show_promo_window():
-    st.image(EVENT_IMAGE_URL)
-    st.caption("💡 창 밖의 어두운 부분을 클릭하거나, 오른쪽 위 X를 누르면 닫힙니다.")
-    if st.button("닫기", type="primary", use_container_width=True):
-        st.rerun()
-
-# --------------------------------------------------------------------------
-# [6] 화면 렌더링 및 페이지 연결
-# --------------------------------------------------------------------------
+selected_model = "gemini-2.0-flash"
 
 render_home_logo()
 selected_page = render_top_navigation()
 
-# 메뉴바 클릭 시 페이지 이동 처리
 if selected_page != st.session_state.page:
     st.session_state.page = selected_page
     st.rerun()
 
-# [팝업 설정] 날짜 제한 로직 (2025년 12월 29일까지)
-PROMO_END_DATE = datetime(2026, 1, 10) 
-
-if "home_popup_shown" not in st.session_state:
-    if st.session_state.page == "홈":
-        if datetime.now() < PROMO_END_DATE:
-            show_promo_window()
-        
-        st.session_state["home_popup_shown"] = True
-
+# 페이지별 렌더링 (인덱스 기반 매칭으로 다국어 완벽 지원)
 target_page = st.session_state.page
 
-if target_page == "홈": view_home.render_home_dashboard(all_sheets)
-elif target_page == "AI상담": view_ai.render_ai_assistant(api_key, selected_model, all_sheets)
-elif target_page == "수익계산": view_compensation.render_calculator_v2()
-elif target_page == "보상플랜": view_compensation.render_compensation(all_sheets)
-elif target_page == "제품구매": view_products.render_products(all_sheets)
-elif target_page == "안전성": view_products.render_safety(all_sheets)
-elif target_page == "액티증상": view_products.render_diagnosis(all_sheets)
-elif target_page == "자료실": view_pdf.render_pdf_viewer("catalog.pdf")
-elif target_page == "호전반응": view_guide.render_guide(all_sheets)
-elif target_page == "체험사례": view_stories.render_experience(all_sheets)
-elif target_page == "성공사례": view_stories.render_success(all_sheets)
-elif target_page == "영상자료": view_videos.render_video_page(all_sheets)
-
-
-
-
+if target_page == menu_options[0]: view_home.render_home_dashboard(all_sheets)
+elif target_page == menu_options[1]: view_ai.render_ai_assistant(api_key, selected_model, all_sheets)
+elif target_page == menu_options[2]: view_compensation.render_calculator_v2()
+elif target_page == menu_options[3]: view_compensation.render_compensation(all_sheets)
+elif target_page == menu_options[4]: view_products.render_products(all_sheets)
+elif target_page == menu_options[5]: view_products.render_safety(all_sheets)
+elif target_page == menu_options[6]: view_products.render_diagnosis(all_sheets)
+elif target_page == menu_options[7]: view_guide.render_guide(all_sheets)
+elif target_page == menu_options[8]: view_stories.render_experience(all_sheets)
+elif target_page == menu_options[9]: view_stories.render_success(all_sheets)
+elif target_page == menu_options[10]: view_videos.render_video_page(all_sheets)
+elif target_page == menu_options[11]: view_pdf.render_pdf_viewer("catalog.pdf")

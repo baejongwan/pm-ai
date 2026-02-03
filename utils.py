@@ -13,21 +13,18 @@ except ImportError:
     HAS_PIL = False
 
 # --------------------------------------------------------------------------
-# [1] 만능 이미지 찾기 함수 (이게 없어서 오류가 난 것입니다)
+# [1] 만능 이미지 찾기 함수 (기존 로직 유지)
 # --------------------------------------------------------------------------
 @st.cache_data
 def get_optimized_image(file_path):
-    # 1. 값이 없으면 하트 아이콘 반환
     if not file_path or str(file_path) == 'nan' or str(file_path).strip() == "":
         return "https://cdn-icons-png.flaticon.com/512/833/833472.png"
     
     file_str = str(file_path).strip()
     
-    # 2. 인터넷 주소(http)라면 바로 반환
     if "http" in file_str: 
         return file_str
     
-    # 3. 경로 떼고 '파일 이름'만 추출
     if "\\" in file_str:
         target_name = file_str.split("\\")[-1]
     elif "/" in file_str:
@@ -35,9 +32,8 @@ def get_optimized_image(file_path):
     else:
         target_name = file_str
         
-    target_lower = target_name.lower() # 소문자로 변환해서 비교
+    target_lower = target_name.lower()
 
-    # 4. 현재 폴더를 뒤져서 실제 파일 찾기
     found_path = None
     for root, dirs, files in os.walk("."): 
         for file in files:
@@ -46,65 +42,49 @@ def get_optimized_image(file_path):
                 break
         if found_path: break
     
-    # 5. 파일을 찾았다면 이미지로 변환 (Base64)
     if found_path:
         try:
             if HAS_PIL:
                 with Image.open(found_path) as img:
-                    img.thumbnail((600, 600))  # 용량 최적화
+                    img.thumbnail((600, 600))
                     buffered = BytesIO()
                     img.save(buffered, format="PNG")
                     img_str = base64.b64encode(buffered.getvalue()).decode()
                     return f"data:image/png;base64,{img_str}"
             else:
-                # PIL이 없으면 그냥 파일 읽기
                 with open(found_path, "rb") as f:
                     data = f.read()
                     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
         except Exception:
-            pass # 변환 실패 시 하트로
+            pass
 
-    # 6. 끝까지 못 찾으면 하트 반환
     return "https://cdn-icons-png.flaticon.com/512/833/833472.png"
 
 # --------------------------------------------------------------------------
-# [2] 엑셀 파일 로딩 (pm_data.xlsx 지정 및 캐시 최적화)
+# [2] 엑셀 파일 로딩 (언어 선택 로직 적용 수정)
 # --------------------------------------------------------------------------
-# ttl=600 : 10분마다 엑셀 파일을 새로 읽어오라는 뜻입니다 (캐시 갱신)
+# target_file 매개변수를 추가하여 언어별 파일(pm_data_ch.xlsx 등)을 받을 수 있게 함
 @st.cache_data(ttl=600) 
-def load_excel():
-    # 1. 파일 이름 지정 (pm_data.xlsx)
-    target_file = "pm_data.xlsx"
-    
-    # 2. 파일이 없으면 다른 엑셀이라도 찾기
+def load_excel(target_file="pm_data.xlsx"):
+    # 파일명이 정확히 일치하는지 확인 (대소문자 구분 및 경로 확인) 
     if not os.path.exists(target_file):
-        excel_files = glob.glob("*.xlsx")
-        if excel_files:
-            target_file = excel_files[0]
+        # pm_data_en.xlsx 처럼 언어별 파일이 없으면 기본 파일로 복구
+        if os.path.exists("pm_data.xlsx"):
+            target_file = "pm_data.xlsx"
         else:
-            return {} # 파일이 아예 없으면 빈 딕셔너리 반환
+            return {}
 
-    # 3. 엑셀 읽기
     try:
-        # sheet_name=None으로 하면 모든 시트를 다 읽어옵니다.
+        # 시트 데이터를 불러와서 시트명 공백 제거 
         df_dict = pd.read_excel(target_file, sheet_name=None, engine='openpyxl')
-        
-        # [중요] 시트 이름의 앞뒤 공백 제거 (실수 방지)
-        # 예: " 제품포인트 " -> "제품포인트" 로 자동 수정
-        cleaned_dict = {}
-        for key, value in df_dict.items():
-            cleaned_dict[key.strip()] = value
-            
+        cleaned_dict = {key.strip(): value for key, value in df_dict.items()}
         return cleaned_dict
-        
     except Exception as e:
-        st.error(f"엑셀 파일 로딩 실패 ({target_file}): {e}")
+        st.error(f"Excel Load Error: {e}")
         return {}
 
 # --------------------------------------------------------------------------
-# [3] (구버전 호환용) AI 함수 더미
+# [3] (구버전 호환용) AI 함수 더미 (기존 유지)
 # --------------------------------------------------------------------------
-# view_ai.py가 이제 스스로 AI를 처리하므로, 여기서는 빈 껍데기만 남겨둡니다.
-# 혹시 다른 파일에서 이 함수를 찾을까봐 남겨두는 안전 장치입니다.
 def generate_ai_response(prompt, api_key, model_name, all_sheets=None):
     return "AI 기능은 view_ai.py에서 직접 처리됩니다."

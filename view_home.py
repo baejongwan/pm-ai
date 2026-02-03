@@ -7,7 +7,7 @@ from func import get_sheet_data, get_daily_visitor_count
 from config import FAMILY_IDS 
 
 # --------------------------------------------------------------------------
-# [1] 관리자용 로그 확인 함수
+# [1] 관리자용 로그 확인 함수 (기존 유지)
 # --------------------------------------------------------------------------
 def render_admin_logs():
     import pandas as pd
@@ -54,20 +54,29 @@ def render_admin_logs():
             st.error("⛔ 비밀번호가 틀렸습니다.")
 
 # --------------------------------------------------------------------------
-# [2] 메인 홈 화면 렌더링
+# [2] 메인 홈 화면 렌더링 (다국어 제목 지원 수정)
 # --------------------------------------------------------------------------
 def render_home_dashboard(all_sheets):
+    # [다국어 지원] 현재 선택된 언어의 메뉴 텍스트 가져오기
+    # app.py의 LANG_CONFIG 구조를 활용합니다.
+    from config import LANG_CONFIG 
     
+    lang_code = st.session_state.get("selected_lang", "KR")
+    current_menu = LANG_CONFIG[lang_code]["menu"]
+    welcome_text = LANG_CONFIG[lang_code]["welcome"]
+
     # [0] 방문자 수
     if "cached_visitor_count" not in st.session_state:
         st.session_state.cached_visitor_count = get_daily_visitor_count()
         
     visitor_count = st.session_state.cached_visitor_count
 
+    # 방문자 텍스트 다국어화 (간이)
+    visitor_label = "오늘의 방문자" if lang_code == "KR" else "Daily Visitors"
     st.markdown(f"""
         <div style="text-align:center; padding: 5px 0 15px 0;">
             <span style="color:#2E7D32; font-weight:bold; font-size:13px;">
-                🌿 오늘의 방문자 : {visitor_count}명
+                🌿 {visitor_label} : {visitor_count}
             </span>
         </div>
     """, unsafe_allow_html=True)
@@ -79,78 +88,83 @@ def render_home_dashboard(all_sheets):
             
     sponsor = st.session_state.random_sponsor
 
+    # 회원가입 텍스트 다국어화
+    join_text = "회원가입 바로가기" if lang_code == "KR" else "Join Now"
+    partner_label = "당신의 성공 파트너" if lang_code == "KR" else "Your Success Partner"
+
     st.markdown(f"""
         <div class="sponsor-container">
             <div class="sponsor-top">
-                <span class="sponsor-name">✨ 당신의 성공 파트너: {sponsor['name']} ({sponsor['id']})</span>
+                <span class="sponsor-name">✨ {partner_label}: {sponsor['name']} ({sponsor['id']})</span>
                 <span class="sponsor-desc">PM-International Team Partner</span>
             </div>
             <div class="sponsor-bottom">
                 <a href="https://m.pmi-korea.com/member/join/step01.do" target="_blank" class="join-btn">
-                    회원가입 바로가기 🔗
+                    {join_text} 🔗
                 </a>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # [2] 메인 비주얼 배너
-    st.markdown("""
+    # [2] 메인 비주얼 배너 (Welcome 문구 적용)
+    st.markdown(f"""
         <div class="main-visual">
-            <h1>FitLine: 건강한 삶을 위한 최고의 선택</h1>
-            <p>독일 프리미엄 건강기능식품의 놀라운 효과를 경험해보세요.</p>
+            <h1>{welcome_text}: FitLine</h1>
+            <p>Premium Health & Nutrition from Germany</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # [3] 주요 서비스 바로가기 (이미지 클릭 시 이동 기능 복구 완료)
-    st.markdown('<div class="section-title">주요 서비스</div>', unsafe_allow_html=True)
+    # [3] 주요 서비스 바로가기 (제목 다국어화)
+    service_label = "주요 서비스" if lang_code == "KR" else "Core Services"
+    st.markdown(f'<div class="section-title">{service_label}</div>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     
-    # 1. AI 상담 (이미지 클릭 링크 복구)
+    # 1. AI 상담 (메뉴 리스트 인덱스 1 활용)
     with col1:
-        st.markdown("""
-            <a href="?page=AI상담" target="_self" class="card-link">
+        st.markdown(f"""
+            <a href="?page={current_menu[1]}" target="_self" class="card-link">
                 <div class="safety-card">
                     <div class="safety-img-box">
                         <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="safety-img">
                     </div>
-                    <div class="safety-title">AI 건강 상담</div>
+                    <div class="safety-title">{current_menu[1]}</div>
                 </div>
             </a>
         """, unsafe_allow_html=True)
         
-    # 2. 수익 시뮬레이션 (이미지 클릭 링크 복구)
+    # 2. 수익 시뮬레이션 (메뉴 리스트 인덱스 2 활용)
     with col2:
-        st.markdown("""
-            <a href="?page=수익계산" target="_self" class="card-link">
+        st.markdown(f"""
+            <a href="?page={current_menu[2]}" target="_self" class="card-link">
                 <div class="safety-card">
                     <div class="safety-img-box">
                         <img src="https://cdn-icons-png.flaticon.com/512/5501/5501360.png" class="safety-img">
                     </div>
-                    <div class="safety-title">수익 시뮬레이션</div>
+                    <div class="safety-title">{current_menu[2]}</div>
                 </div>
             </a>
         """, unsafe_allow_html=True)
 
-    # 3. 액티바이즈 진단 (이미지 클릭 링크 복구)
+    # 3. 액티바이즈 진단 (메뉴 리스트 인덱스 6 활용)
     with col3:
-        st.markdown("""
-            <a href="?page=액티증상" target="_self" class="card-link">
+        st.markdown(f"""
+            <a href="?page={current_menu[6]}" target="_self" class="card-link">
                 <div class="safety-card">
                     <div class="safety-img-box">
                         <img src="https://cdn-icons-png.flaticon.com/512/8454/8454230.png" class="safety-img">
                     </div>
-                    <div class="safety-title">액티바이즈 진단</div>
+                    <div class="safety-title">{current_menu[6]}</div>
                 </div>
             </a>
         """, unsafe_allow_html=True)
 
 
     # ----------------------------------------------------------------------
-    # [4] ★ 오늘의 아침 조회 (버튼 기능 유지) ★
+    # [4] ★ 오늘의 아침 조회 (제목 다국어화) ★
     # ----------------------------------------------------------------------
-    # 영상은 '더보기' 버튼을 눌러야 이동하는 것이 자연스러우므로 버튼 방식을 유지합니다.
-    st.markdown('<div class="section-title">📺 오늘의 아침 조회</div>', unsafe_allow_html=True)
+    morning_label = current_menu[10] # "영상자료" 또는 "Videos"
+    st.markdown(f'<div class="section-title">📺 {morning_label}</div>', unsafe_allow_html=True)
 
     if all_sheets and "아침방송" in all_sheets:
         video_df = all_sheets["아침방송"]
@@ -168,30 +182,29 @@ def render_home_dashboard(all_sheets):
                     if "http" in v_link:
                         st.video(v_link)
                     else:
-                        st.error("영상 링크가 올바르지 않습니다.")
+                        st.error("Invalid Link")
                     
-                    # 제목과 더보기 버튼
                     v_col1, v_col2 = st.columns([3, 1])
                     with v_col1:
                         st.write(f"**{v_title}**")
                         st.caption(f"📅 {v_date}")
                     with v_col2:
-                        st.write("") 
-                        # 여기는 아까 수정해드린 버튼 방식을 유지합니다 (잘 작동하니까요!)
-                        if st.button("더보기 >", key="btn_more_videos"):
-                            st.session_state.page = "영상자료"
+                        more_text = "더보기 >" if lang_code == "KR" else "More >"
+                        if st.button(more_text, key="btn_more_videos"):
+                            st.session_state.page = current_menu[10]
                             st.rerun()
                             
             except Exception as e:
-                st.error("영상 정보를 불러오는 중 오류가 발생했습니다.")
+                st.error("Error loading video info")
         else:
-            st.info("등록된 최신 영상이 없습니다.")
+            st.info("No recent videos")
     else:
-        st.info("아직 '아침방송' 데이터가 없습니다.")
+        st.info("No data")
 
 
-    # [5] 제품 안전성 인증 (이미지 클릭 링크 복구)
-    st.markdown('<div class="section-title">제품 안전성 인증</div>', unsafe_allow_html=True)
+    # [5] 제품 안전성 인증 (제목 다국어화)
+    safety_label = current_menu[5] # "안전성" 또는 "Safety"
+    st.markdown(f'<div class="section-title">{safety_label}</div>', unsafe_allow_html=True)
     
     target_safe = get_sheet_data(all_sheets, "안전성")
     safe_data = []
@@ -215,18 +228,18 @@ def render_home_dashboard(all_sheets):
                 if "home_logo" in img_src or not img_src:
                       img_src = "https://cdn-icons-png.flaticon.com/512/1156/1156743.png"
 
-                # 예전처럼 <a href> 태그를 사용하여 이미지를 클릭하면 이동하도록 수정
                 st.markdown(f"""
-                    <a href="?page=안전성" target="_self" class="card-link">
+                    <a href="?page={safety_label}" target="_self" class="card-link">
                         <div class="safety-card">
                             <div class="safety-img-box"><img src="{img_src}" class="safety-img"></div>
-                            <div class="safety-title">{item.get('인증제목', '인증마크')}</div>
+                            <div class="safety-title">{item.get('인증제목', 'Certification')}</div>
                         </div>
                     </a>
                 """, unsafe_allow_html=True)
 
-    # [6] FitLine 인기 제품 (이미지 클릭 링크 복구)
-    st.markdown('<div class="section-title">FitLine 인기 제품</div>', unsafe_allow_html=True)
+    # [6] FitLine 인기 제품 (제목 다국어화)
+    popular_label = current_menu[4] # "제품구매" 또는 "Products"
+    st.markdown(f'<div class="section-title">FitLine {popular_label}</div>', unsafe_allow_html=True)
     
     target_prod = get_sheet_data(all_sheets, "제품설명")
     if target_prod is not None:
@@ -235,9 +248,8 @@ def render_home_dashboard(all_sheets):
         for i, (idx, item) in enumerate(df.iterrows()):
             with p_cols[i % 2]:
                 img_src = get_optimized_image(item.get('이미지주소', ''))
-                # 예전처럼 <a href> 태그를 사용하여 이미지를 클릭하면 이동하도록 수정
                 st.markdown(f"""
-                    <a href="?page=제품구매" target="_self" class="card-link">
+                    <a href="?page={popular_label}" target="_self" class="card-link">
                         <div class="shop-item">
                             <div class="shop-img-box"><img src="{img_src}" class="shop-img"></div>
                             <div class="shop-info">
@@ -248,13 +260,14 @@ def render_home_dashboard(all_sheets):
                     </a>
                 """, unsafe_allow_html=True)
                 
-    # 제품 전체보기 버튼 (이건 버튼이 편하실 것 같아 유지합니다)
-    if st.button("제품 전체보기 >", use_container_width=True):
-        st.session_state.page = "제품구매"
+    view_all_text = "전체보기 >" if lang_code == "KR" else "View All >"
+    if st.button(view_all_text, use_container_width=True):
+        st.session_state.page = popular_label
         st.rerun()
             
-    # [7] 고객서비스
-    st.markdown('<div class="section-title">고객 서비스</div>', unsafe_allow_html=True)
+    # [7] 고객서비스 (제목 다국어화)
+    cs_label = "고객 서비스" if lang_code == "KR" else "Customer Service"
+    st.markdown(f'<div class="section-title">{cs_label}</div>', unsafe_allow_html=True)
     st.markdown("""
         <div class="cs-box">
             <a href="https://www.pmi-korea.com/story/company/about/page.do" target="_blank" class="cs-item">
@@ -263,14 +276,13 @@ def render_home_dashboard(all_sheets):
             </a>
             <a href="https://www.pmi-korea.com/story/customer/csCenter/page.do" target="_blank" class="cs-item">
                 <span class="cs-icon">🎧</span>
-                <span class="cs-text">고객센터</span>
+                <span class="cs-text">CS Center</span>
             </a>
             <a href="https://www.pmi-korea.com/story/pm/news/list.do" target="_blank" class="cs-item">
                 <span class="cs-icon">📰</span>
-                <span class="cs-text">보도자료</span>
+                <span class="cs-text">News</span>
             </a>
         </div>
     """, unsafe_allow_html=True)
 
-    # [8] 관리자 로그 확인 기능 실행
     render_admin_logs()
