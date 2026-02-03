@@ -142,7 +142,7 @@ def render_top_navigation():
 # [5] 화면 렌더링 및 페이지 라우팅
 # --------------------------------------------------------------------------
 api_key = GOOGLE_API_KEY
-selected_model = "gemini-2.0-flash"
+selected_model = "gemini-3-flash"
 
 render_home_logo()
 selected_page = render_top_navigation()
@@ -165,4 +165,5 @@ elif target_page == menu_options[7]: view_guide.render_guide(all_sheets)
 elif target_page == menu_options[8]: view_stories.render_experience(all_sheets)
 elif target_page == menu_options[9]: view_stories.render_success(all_sheets)
 elif target_page == menu_options[10]: view_videos.render_video_page(all_sheets)
+
 elif target_page == menu_options[11]: view_pdf.render_pdf_viewer("catalog.pdf")
